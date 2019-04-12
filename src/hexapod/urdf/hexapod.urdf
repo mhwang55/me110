@@ -1,0 +1,468 @@
+<?xml version="1.0"?>
+
+<robot name="hexapod">
+
+  <material name="red">
+    <color rgba=".82 0.06 0.06 1"/>
+  </material>
+
+  <material name="silver">
+    <color rgba="0.6 0.6 0.6 1"/>
+  </material>
+
+  <link name="world">
+  </link>
+
+  <joint name="world_to_Base" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <parent link="world"/>
+    <child link="Base"/>
+  </joint>
+
+  <link name="Base">
+    <inertial>
+      <origin
+        xyz="0 .200 0"
+        rpy="1.57079632679 0 0" />
+      <mass
+        value="6.14101" />
+      <inertia
+        ixx="0.08151752649"
+        ixy="0"
+        ixz="0"
+        iyy="0.49424148601"
+        iyz="0"
+        izz="0.41276522968" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 .200 0"
+        rpy="1.57079632679 0 0" />
+      <geometry>
+        <mesh
+          filename="package://hexapod/urdf/stls/body.STL" scale=".001 .001 .001" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.82421875 0.82421875 0.82421875" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 .200 0"
+        rpy="1.57079632679 0 0" />
+      <geometry>
+        <mesh
+          filename="package://hexapod/urdf/stls/body.STL" scale=".001 .001 .001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="Base_to_Motor1" type="fixed">
+    <origin xyz=".124 .149 0" rpy="0 0 1.57079632679" />
+    <parent link="Base"/>
+    <child link="Motor1"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <link name="Motor1">
+    <visual>
+      <origin
+        xyz=".03705 .0365 0"
+        rpy="0 0 3.14159265359" />
+      <geometry>
+        <mesh
+          filename="package://hexapod/urdf/stls/X8Actuator.STL" scale=".001 .001 .001" />
+      </geometry>
+      <material
+        name="red">
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz=".03705 .0365 0"
+        rpy="0 0 3.14159265359" />
+      <geometry>
+        <mesh
+          filename="package://hexapod/urdf/stls/X8Actuator.STL" scale=".001 .001 .001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="Base_to_Motor2" type="fixed">
+    <origin xyz=".474 .149 0" rpy="0 0 1.57079632679" />
+    <parent link="Base"/>
+    <child link="Motor2"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <link name="Motor2">
+    <visual>
+      <origin
+        xyz=".03705 .0365 0"
+        rpy="0 0 3.14159265359" />
+      <geometry>
+        <mesh
+          filename="package://hexapod/urdf/stls/X8Actuator.STL" scale=".001 .001 .001" />
+      </geometry>
+      <material
+        name="red">
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz=".03705 .0365 0"
+        rpy="0 0 3.14159265359" />
+      <geometry>
+        <mesh
+          filename="package://hexapod/urdf/stls/X8Actuator.STL" scale=".001 .001 .001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="Base_to_Motor3" type="fixed">
+    <origin xyz=".824 .149 0" rpy="0 0 1.57079632679" />
+    <parent link="Base"/>
+    <child link="Motor3"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <link name="Motor3">
+    <visual>
+      <origin
+        xyz=".03705 .0365 0"
+        rpy="0 0 3.14159265359" />
+      <geometry>
+        <mesh
+          filename="package://hexapod/urdf/stls/X8Actuator.STL" scale=".001 .001 .001" />
+      </geometry>
+      <material
+        name="red">
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz=".03705 .0365 0"
+        rpy="0 0 3.14159265359" />
+      <geometry>
+        <mesh
+          filename="package://hexapod/urdf/stls/X8Actuator.STL" scale=".001 .001 .001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="Base_to_Motor4" type="fixed">
+    <origin xyz=".824 -.149 0" rpy="0 0 1.57079632679" />
+    <parent link="Base"/>
+    <child link="Motor4"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <link name="Motor4">
+    <visual>
+      <origin
+        xyz="-.03705 -.0365 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://hexapod/urdf/stls/X8Actuator.STL" scale=".001 .001 .001" />
+      </geometry>
+      <material
+        name="red">
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="-.03705 -.0365 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://hexapod/urdf/stls/X8Actuator.STL" scale=".001 .001 .001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="Base_to_Motor5" type="fixed">
+    <origin xyz=".474 -.149 0" rpy="0 0 1.57079632679" />
+    <parent link="Base"/>
+    <child link="Motor5"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <link name="Motor5">
+    <visual>
+      <origin
+        xyz="-.03705 -.0365 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://hexapod/urdf/stls/X8Actuator.STL" scale=".001 .001 .001" />
+      </geometry>
+      <material
+        name="red">
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="-.03705 -.0365 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://hexapod/urdf/stls/X8Actuator.STL" scale=".001 .001 .001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="Base_to_Motor6" type="fixed">
+    <origin xyz=".124 -.149 0" rpy="0 0 1.57079632679" />
+    <parent link="Base"/>
+    <child link="Motor6"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <link name="Motor6">
+    <visual>
+      <origin
+        xyz="-.03705 -.0365 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://hexapod/urdf/stls/X8Actuator.STL" scale=".001 .001 .001" />
+      </geometry>
+      <material
+        name="red">
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="-.03705 -.0365 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://hexapod/urdf/stls/X8Actuator.STL" scale=".001 .001 .001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="Motor1_to_JointPlate21" type="continuous">
+    <origin xyz="0 0 .05145" rpy="0 0 3.14159265359" />
+    <parent link="Motor1"/>
+    <child link="JointPlate21"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <link name="JointPlate21">
+    <visual>
+      <origin
+        xyz="-.0350 -.02255 -.00635"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://hexapod/urdf/stls/jointPlate2.STL" scale=".001 .001 .001" />
+      </geometry>
+      <material
+        name="silver">
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="-.035 -.02255 -.00635"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://hexapod/urdf/stls/jointPlate2.STL" scale=".001 .001 .001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="JointPlate21_to_JointPlate11" type="fixed">
+    <origin xyz="0 0 .093825" rpy="0 3.14159265359 0" />
+    <parent link="JointPlate21"/>
+    <child link="JointPlate11"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <link name="JointPlate11">
+    <visual>
+      <origin
+        xyz="-.03 -.02890 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://hexapod/urdf/stls/jointPlate1.STL" scale=".001 .001 .001" />
+      </geometry>
+      <material
+        name="silver">
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="-.03 -.02890 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://hexapod/urdf/stls/jointPlate1.STL" scale=".001 .001 .001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="JointPlate11_to_FemurMotor" type="fixed">
+    <origin xyz="0 0 .0425" rpy="-1.57079632679 3.14159265359 0" />
+    <parent link="JointPlate11"/>
+    <child link="FemurMotor"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <link name="FemurMotor">
+    <visual>
+      <origin
+        xyz="-.0365 -.03705 -.02255"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://hexapod/urdf/stls/X8Actuator.STL" scale=".001 .001 .001" />
+      </geometry>
+      <material
+        name="red">
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="-.0365 -.03705 -.02890"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://hexapod/urdf/stls/X8Actuator.STL" scale=".001 .001 .001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="FemurMotor_to_LegUpper1" type="continuous">
+    <origin xyz="0 0 .02275" rpy="0 -1.57079632679 -3.14159265359" />
+    <parent link="FemurMotor"/>
+    <child link="LegUpper1"/>
+    <axis xyz="1 0 0"/>
+  </joint>
+
+  <link name="LegUpper1">
+    <visual>
+      <origin
+        xyz="0 -.03 -.230"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://hexapod/urdf/stls/legUpper.STL" scale=".001 .001 .001" />
+      </geometry>
+      <material
+        name="silver">
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 -.03 -.230"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://hexapod/urdf/stls/legUpper.STL" scale=".001 .001 .001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="LegUpper1_to_TibiaMotor1" type="fixed">
+    <origin xyz="0 0 -.200" rpy="0 1.57079632679 -3.14159265359" />
+    <parent link="LegUpper1"/>
+    <child link="TibiaMotor1"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <link name="TibiaMotor1">
+    <visual>
+      <origin
+        xyz="-.03705 -.0365 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://hexapod/urdf/stls/X8Actuator.STL" scale=".001 .001 .001" />
+      </geometry>
+      <material
+        name="red">
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="-.03705 -.0365 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://hexapod/urdf/stls/X8Actuator.STL" scale=".001 .001 .001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="TibiaMotor1_to_LegLower1" type="continuous">
+    <origin xyz="0 0 .05145" rpy="0 1.57079632679 1.57079632679" />
+    <parent link="TibiaMotor1"/>
+    <child link="LegLower1"/>
+    <axis xyz="1 0 0"/>
+  </joint>
+
+  <link name="LegLower1">
+    <visual>
+      <origin
+        xyz="0 .03 .3"
+        rpy="3.14159265359 0 0" />
+      <geometry>
+        <mesh
+          filename="package://hexapod/urdf/stls/legLower.STL" scale=".001 .001 .001" />
+      </geometry>
+      <material
+        name="silver">
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 .03 .3"
+        rpy="3.14159265359 0 0" />
+      <geometry>
+        <mesh
+          filename="package://hexapod/urdf/stls/legLower.STL" scale=".001 .001 .001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="LegLower1_to_Foot1" type="fixed">
+    <origin xyz="0 0 .3" rpy="0 3.14159265359 0" />
+    <parent link="LegLower1"/>
+    <child link="Foot1"/>
+    <axis xyz="0 0 1"/>
+  </joint>
+
+  <link name="Foot1">
+    <visual>
+      <origin
+        xyz="-.038175 .035 -.00635"
+        rpy="1.57079632679 0 0" />
+      <geometry>
+        <mesh
+          filename="package://hexapod/urdf/stls/foot.STL" scale=".001 .001 .001" />
+      </geometry>
+      <material
+        name="silver">
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="-.038175 .035 -.00635"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://hexapod/urdf/stls/foot.STL" scale=".001 .001 .001"/>
+      </geometry>
+    </collision>
+  </link>
+
+
+</robot>
+
+

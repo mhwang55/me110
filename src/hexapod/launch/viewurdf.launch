@@ -1,0 +1,16 @@
+<launch>
+
+  <param name="robot_description" textfile="$(find hexapod)/urdf/hexapod.urdf"/>
+
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+    <param name="use_gui" value="false"/>
+  </node> 
+
+  <node name="master" pkg="hexapod" type="hexapod_master_rviz" respawn="true" output="screen"/>
+  <node name="gait" pkg="hexapod" type="hexapod_gait" respawn="true" output="screen"/>
+
+  <node name="state" pkg="robot_state_publisher" type="robot_state_publisher" respawn="true"/>
+
+  <node name="rviz" pkg="rviz" type="rviz"/>
+
+</launch>
