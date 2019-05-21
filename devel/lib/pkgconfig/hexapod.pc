@@ -1,8 +1,0 @@
-prefix=/home/bianca/me110/devel
-
-Name: hexapod
-Description: Description of hexapod
-Version: 0.0.0
-Cflags: 
-Libs: -L/home/bianca/me110/devel/lib 
-Requires: 

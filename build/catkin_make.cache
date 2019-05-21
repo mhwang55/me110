@@ -1,2 +1,0 @@
-hexapod
--DCATKIN_DEVEL_PREFIX=/home/bianca/me110/devel -DCMAKE_INSTALL_PREFIX=/home/bianca/me110/install -G Unix Makefiles
