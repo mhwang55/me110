@@ -1,6 +1,7 @@
 #include "ros/ros.h"
 #include "std_msgs/Float64.h"
 #include "std_msgs/Bool.h"
+#include "std_msgs/Float64MultiArray.h"
 #include "sensor_msgs/JointState.h"
 #include "stdint.h"
 #include "math.h"
@@ -13,19 +14,21 @@
 
 sensor_msgs::JointState rviz_command_msg;
 
-std_msgs::Bool done; 
-
 using namespace std;
 using namespace hebiros;
 
 vector<vector<float>> queue; 
 vector<float> next_set;
-volatile double         goalpos;        // The goal position
+std_msgs::Float64MultiArray goalpos;        // The goal position
 volatile int            feedbackvalid = 0;
 sensor_msgs::JointState feedback;       // The actuator feedback struccture
 sensor_msgs::JointState initial_pos;
 double d = 5;
-
+// max seconds to move between points
+double moving_time = 5; 
+std_msgs::Bool moving;
+bool newGoal;
+double current_time, timeSince; 
 
 /*
 **   Feedback Subscriber Callback
@@ -40,10 +43,10 @@ void feedbackCallback(sensor_msgs::JointState data)
 /*
 **   Goal Subscriber Callback
 */
-void goalCallback(const std_msgs::Float64::ConstPtr& msg)
+void goalCallback(const std_msgs::Float64MultiArray data)
 {
-  goalpos = msg->data;
-  ROS_INFO("I heard: [%f]", (double) msg->data);
+  goalpos = data;
+  newGoal = true;
 }
 
 
@@ -53,7 +56,9 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "tripod_gait");
   ros::NodeHandle n;
   ros::Rate loop_rate(200);
+  moving.data = false;
   
+  current_time = ros::Time::now().toSec(); 
   // Ask the Hebi node to list the modules.  Create a client to their
   // service, instantiate a service class, and call.  This has no
   // input or output arguments.
@@ -99,8 +104,8 @@ int main(int argc, char **argv)
   initial_pos.velocity.reserve(leg_components);
   initial_pos.effort.reserve(leg_components);
 
-  // Create publisher to send done commands. 
-  ros::Publisher done_publisher = n.advertise<
+  // Create publisher to send moving commands. 
+  ros::Publisher moving_publisher = n.advertise<std_msgs::Bool>("/moving", 100);
 
   // Create a publisher to send commands to the actuator group.
   ros::Publisher command_publisher = n.advertise<sensor_msgs::JointState>("/hebiros/"+group_name+"/command/joint_state", 100);
@@ -128,12 +133,14 @@ int main(int argc, char **argv)
   command_msg.velocity.resize(leg_components);
   command_msg.effort.resize(leg_components);
 
+  moving_publisher.publish(moving);
   // Wait until we have some feedback from the actuator.
   ROS_INFO("Waiting for initial feedback");
   while (!feedbackvalid)  {
       ros::spinOnce();
       loop_rate.sleep();
   }
+  ROS_INFO("Initial feedback received");
 
   // Prep the servo loop.
   double  dt = loop_rate.expectedCycleTime().toSec();
@@ -142,76 +149,51 @@ int main(int argc, char **argv)
   double  cmdvel = 0.0;
 
   while(ros::ok())  { 
+    timeSince = ros::Time::now().toSec() - current_time;
 
-    initial_pos = feedback;
+    if (newGoal) { 
+      // Got a new target
+      initial_pos = feedback;
+      newGoal = false;
+      current_time = ros::Time::now().toSec(); 
+      timeSince = 0.; 
+      moving.data = true;
+      moving_publisher.publish(moving);
+    } 
 
-    for (int i=0; i<10; i++) {
-      command_msg.position[0] = 0;
-      command_msg.position[1] = initial_pos.position[1] + 
-                                (M_PI/2 - initial_pos.position[1]) * 
-                                (10*((i/10)*d*(i/10)*d*(i/10)*d) - 
-                                15*((i/10)*d)*((i/10)*d*(i/10)*d*(i/10)*d) + 
-                                6*((i/10)*d*(i/10)*d*(i/10)*d*(i/10)*d*(i/10)*d));
-      command_msg.position[2] = 0;
-      command_msg.effort[0] = 0;
-      command_msg.effort[1] = 8;
-      command_msg.effort[2] = -5;
-      command_msg.position[3] = 0;
-      command_msg.position[4] = initial_pos.position[4] + 
-                                (-M_PI/2 - initial_pos.position[4]) * 
-                                (10*((i/10)*d*(i/10)*d*(i/10)*d) - 
-                                15*((i/10)*d)*((i/10)*d*(i/10)*d*(i/10)*d) + 
-                                6*((i/10)*d*(i/10)*d*(i/10)*d*(i/10)*d*(i/10)*d));
-      command_msg.position[5] = 0;
-      command_msg.effort[3] = 0;
-      command_msg.effort[4] = -8;
-      command_msg.effort[5] = 5;
-      command_msg.position[6] = 0;
-      command_msg.position[7] = initial_pos.position[7] + 
-                                (M_PI/2 - initial_pos.position[7]) * 
-                                (10*((i/10)*d*(i/10)*d*(i/10)*d) - 
-                                15*((i/10)*d)*((i/10)*d*(i/10)*d*(i/10)*d) + 
-                                6*((i/10)*d*(i/10)*d*(i/10)*d*(i/10)*d*(i/10)*d));
-      command_msg.position[8] = 0;
-      command_msg.effort[6] = 0;
-      command_msg.effort[7] = 8;
-      command_msg.effort[8] = -5;
-      command_msg.position[9] = 0;
-      command_msg.position[10] = initial_pos.position[10] + 
-                                (-M_PI/2 - initial_pos.position[10]) * 
-                                (10*((i/10)*d*(i/10)*d*(i/10)*d) - 
-                                15*((i/10)*d)*((i/10)*d*(i/10)*d*(i/10)*d) + 
-                                6*((i/10)*d*(i/10)*d*(i/10)*d*(i/10)*d*(i/10)*d));
-      command_msg.position[11] = 0;
-      command_msg.effort[9] = 0;
-      command_msg.effort[10] = -8;
-      command_msg.effort[11] = 5;
-      command_msg.position[12] = 0;
-      command_msg.position[13] = initial_pos.position[13] + 
-                                (M_PI/2 - initial_pos.position[13]) * 
-                                (10*((i/10)*d*(i/10)*d*(i/10)*d) - 
-                                15*((i/10)*d)*((i/10)*d*(i/10)*d*(i/10)*d) + 
-                                6*((i/10)*d*(i/10)*d*(i/10)*d*(i/10)*d*(i/10)*d));
-      command_msg.position[14] = 0;
-      command_msg.effort[12] = 0;
-      command_msg.effort[13] = 8;
-      command_msg.effort[14] = -5;
-      command_msg.position[15] = 0;
-      command_msg.position[16] = initial_pos.position[16] + 
-                                (-M_PI/2 - initial_pos.position[16]) * 
-                                (10*((i/10)*d*(i/10)*d*(i/10)*d) - 
-                                15*((i/10)*d)*((i/10)*d*(i/10)*d*(i/10)*d) + 
-                                6*((i/10)*d*(i/10)*d*(i/10)*d*(i/10)*d*(i/10)*d));
-      command_msg.position[17] = 0;
-      command_msg.effort[15] = 0;
-      command_msg.effort[16] = -8;
-      command_msg.effort[17] = 5;
+    if (timeSince < moving_time && !goalpos.data.empty()) {
+      // Keep moving towards the new point using min-jerk trajectory
+      for (int i = 0; i < leg_components; i++) {
+        // Test the first leg first.
+        if (i == 0 || i == 1 || i == 2) { 
+        command_msg.position[i] = initial_pos.position[i] + 
+                                  (goalpos.data[i] - initial_pos.position[i]) * 
+                                  (10*(timeSince/10)*moving_time*(timeSince/10)*
+                                   moving_time*(timeSince/10) - 
+                                   15*moving_time*(timeSince/10)*moving_time*(timeSince/10)*
+                                   moving_time*(timeSince/10)*moving_time*(timeSince/10) + 
+                                   6*moving_time*(timeSince/10)*moving_time*(timeSince/10)*
+                                   moving_time*(timeSince/10)*moving_time*(timeSince/10)*
+                                   moving_time*(timeSince/10)); 
+        } else {
+        command_msg.position[i] = feedback.position[i];
+        }
+      }
 
+      timeSince = ros::Time::now().toSec() - current_time;
+      moving.data = true;
+      moving_publisher.publish(moving);
       command_publisher.publish(command_msg);
-
-    }
+    } else { 
+      // Ready to receive new position command
+      moving.data = false; 
+      moving_publisher.publish(moving);
+    } 
 
     ros::spinOnce();
     loop_rate.sleep();
+
   }
+
+
 }
