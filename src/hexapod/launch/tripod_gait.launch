@@ -1,8 +1,4 @@
 <launch>
-
-
   <node name="tripod_gait" pkg="hexapod" type="hexapod_gait" respawn="true" output="screen"/>
   <node name="hebiros_node" pkg="hebiros" type="hebiros_node" respawn="false" output="screen"/>
-
-
 </launch>
