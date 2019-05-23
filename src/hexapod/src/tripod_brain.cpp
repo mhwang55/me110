@@ -23,7 +23,8 @@ std_msgs::Bool moving;
 hexapod::InstructionQueue standing_queue;
 hexapod::Instruction standing_pos;
 hexapod::Instruction current_pos;
-int leg_components = 15;
+int leg_components = 18;
+//int leg_components = 3;
 
 sensor_msgs::JointState feedback;       // The actuator feedback struccture
 volatile int            feedbackvalid = 0;
@@ -42,36 +43,238 @@ void feedbackCallback(sensor_msgs::JointState data)
   feedbackvalid = 1;
 }
 
-void stand() { 
-  for (int i = 0; i < 2; i++) {
-    standing_pos.data.clear();
+void stand()
+{
+  double effortFemurDown, effortFemurDownFinal, effortTibiaDown;
+  effortFemurDown = 8;
+  effortFemurDownFinal = 6;
+  effortTibiaDown = 2.8;
+  for (int i = 0; i < 3; i++)
+  {
+    standing_pos.positions.clear();
+    standing_pos.efforts.clear();
+
     // Create a queue of standing positions.
-    if (i == 0) { 
-      for (int j = 0; j < leg_components; i++) {
-        standing_pos.data.push_back(0.);
+    if (i == 0)
+    {
+      for (int j = 0; j < leg_components; j++)
+      {
+        standing_pos.positions.push_back(0.);
+        /*
+        if (j == 0)
+        {
+          standing_pos.positions.push_back(0.3);
+        }
+        else if (j == 3)
+        {
+          standing_pos.positions.push_back(-0.3);
+        }
+        else if (j == 12)
+        {
+          standing_pos.positions.push_back(-0.3);
+        }
+        else if (j == 15)
+        {
+          standing_pos.positions.push_back(0.3);
+        }
+        else
+        {
+          standing_pos.positions.push_back(0.);
+        }
+        //*/
       }
-    } else {
-      for (int j = 0; j < leg_components; j++) {
-        if (j % 3 == 2) {
-          if (j % 2 == 0) { 
-            standing_pos.data.push_back(-M_PI/2);
-          } else { 
-            standing_pos.data.push_back(M_PI/2);
+    }
+    else if (i == 1)
+    {
+      for (int j = 0; j < leg_components; j++)
+      {
+        if (j % 3 == 1)
+        {
+          if (j == 16)
+          {
+            standing_pos.positions.push_back(-M_PI / 2);
+            standing_pos.efforts.push_back(-effortFemurDown);
           }
-        } else { 
-          standing_pos.data.push_back(0.);
+          else if (j == 1)
+          {
+            standing_pos.positions.push_back(M_PI / 2);
+            standing_pos.efforts.push_back(11);
+          }
+          else if (j == 4)
+          {
+            standing_pos.positions.push_back(-M_PI / 2);
+            standing_pos.efforts.push_back(-10);
+          }
+          else if (j % 2 == 0)
+          {
+            standing_pos.positions.push_back(-M_PI / 2);
+            standing_pos.efforts.push_back(-effortFemurDown - 1);
+          }
+          else
+          {
+            standing_pos.positions.push_back(M_PI / 2);
+            standing_pos.efforts.push_back(effortFemurDown);
+          }
+        }
+        else if (j % 3 == 2)
+        {
+          if (j % 2 == 0)
+          {
+            standing_pos.positions.push_back(0.);
+            standing_pos.efforts.push_back(-0.2);
+          }
+          else
+          {
+            standing_pos.positions.push_back(0.);
+            standing_pos.efforts.push_back(0.2);
+          }
+        }
+        else
+        {
+          standing_pos.positions.push_back(0.);
+          standing_pos.efforts.push_back(0.);
+          /*
+          if (j == 0)
+          {
+            standing_pos.positions.push_back(0.3);
+            standing_pos.efforts.push_back(0.);
+          }
+          else if (j == 3)
+          {
+            standing_pos.positions.push_back(-0.3);
+            standing_pos.efforts.push_back(-0.);
+          }
+          else if (j == 12)
+          {
+            standing_pos.positions.push_back(-0.3);
+            standing_pos.efforts.push_back(-0.);
+          }
+          else if (j == 15)
+          {
+            standing_pos.positions.push_back(0.3);
+            standing_pos.efforts.push_back(0.);
+          }
+          else
+          {
+            standing_pos.positions.push_back(0.);
+            standing_pos.efforts.push_back(0.);
+          }
+          //*/
         }
       }
     }
+    else
+    {
+      for (int j = 0; j < leg_components; j++)
+      {
+        if (j % 3 == 1)
+        {
+          if (j == 16)
+          {
+            standing_pos.positions.push_back(-M_PI / 2);
+            standing_pos.efforts.push_back(-effortFemurDownFinal);
+          }
+          else if (j == 1)
+          {
+            standing_pos.positions.push_back(M_PI / 2);
+            standing_pos.efforts.push_back(effortFemurDownFinal + 3);
+          }
+          else if (j == 4)
+          {
+            standing_pos.positions.push_back(-M_PI / 2);
+            standing_pos.efforts.push_back(-effortFemurDownFinal - 2);
+          }
+          else if (j % 2 == 0)
+          {
+            standing_pos.positions.push_back(-M_PI / 2);
+            standing_pos.efforts.push_back(-effortFemurDownFinal - 1);
+          }
+          else
+          {
+            standing_pos.positions.push_back(M_PI / 2);
+            standing_pos.efforts.push_back(effortFemurDownFinal);
+          }
+ 
+          /*
+          if (j % 2 == 0)
+          {
+            standing_pos.positions.push_back(-M_PI / 2);
+            standing_pos.efforts.push_back(-effortFemurDown);
+          }
+          else
+          {
+            standing_pos.positions.push_back(M_PI / 2);
+            standing_pos.efforts.push_back(effortFemurDown);
+          }
+          //*/
+        }
+        else if (j % 3 == 2)
+        {
+          if (j % 2 == 0)
+          {
+            standing_pos.positions.push_back(0.);
+            standing_pos.efforts.push_back(-effortTibiaDown + 0.0);
+          }
+          else
+          {
+            standing_pos.positions.push_back(0.);
+            standing_pos.efforts.push_back(effortTibiaDown - 0.2);
+          }
+        }
+        else
+        {
+          standing_pos.positions.push_back(0.);
+          standing_pos.efforts.push_back(0.);
+          /*
+          if (j == 0)
+          {
+            standing_pos.positions.push_back(0.3);
+            standing_pos.efforts.push_back(0.);
+          }
+          else if (j == 3)
+          {
+            standing_pos.positions.push_back(-0.3);
+            standing_pos.efforts.push_back(-0.);
+          }
+          else if (j == 12)
+          {
+            standing_pos.positions.push_back(-0.3);
+            standing_pos.efforts.push_back(-0.);
+          }
+          else if (j == 15)
+          {
+            standing_pos.positions.push_back(0.3);
+            standing_pos.efforts.push_back(0.);
+          }
+          else
+          {
+            standing_pos.positions.push_back(0.);
+            standing_pos.efforts.push_back(0.);
+          }
+          //*/
+        }
+        /*
+        else
+        {
+          standing_pos.positions.push_back(0.);
+          standing_pos.efforts.push_back(0.);
+        }
+        */
+      }
+    }
 
-    if (i == 2) {
-      standing_pos.header = "standing";
-    } else { 
+    if (i == 2)
+    {
       standing_pos.header = "final";
     }
-    standing_queue.data.push_back(standing_pos);
+    else
+    {
+      standing_pos.header = "standing";
+    }
 
-  } 
+    standing_queue.data.push_back(standing_pos);
+  }
+
   reverse(standing_queue.data.begin(), standing_queue.data.end());
 }
 
@@ -103,12 +306,24 @@ int main(int argc, char **argv)
   ros::ServiceClient add_group_client = n.serviceClient<AddGroupFromNamesSrv>("/hebiros/add_group_from_names");
   AddGroupFromNamesSrv add_group_srv;
   add_group_srv.request.group_name = group_name;
-  add_group_srv.request.names = {"hip1", "femur1", "tibia1", //"hip2", "femur2", "tibia2",
-                                 "hip3", "femur3", "tibia3", "hip4", "femur4", "tibia4",
-                                 "hip5", "femur5", "tibia5", "hip6", "femur6", "tibia6"};
-  add_group_srv.request.families = {"leg1", "leg1", "leg1", //"leg2", "leg2", "leg2", 
-                                    "leg3", "leg3", "leg3", "leg4", "leg4", "leg4",
-                                    "leg5", "leg5", "leg5", "leg6", "leg6", "leg6"};
+  add_group_srv.request.names = {
+                                 "hip1", "femur1", "tibia1",
+                                 "hip2", "femur2", "tibia2",
+                                 "hip3", "femur3", "tibia3",
+                                 "hip4", "femur4", "tibia4",
+                                 "hip5", "femur5", "tibia5",
+                                 "hip6", "femur6", "tibia6"
+                                };
+
+  add_group_srv.request.families = {
+                                    "leg1", "leg1", "leg1",
+                                    "leg2", "leg2", "leg2", 
+                                    "leg3", "leg3", "leg3",
+                                    "leg4", "leg4", "leg4",
+                                    "leg5", "leg5", "leg5",
+                                    "leg6", "leg6", "leg6"
+                                   };
+
   // Repeatedly call the service until it succeeds.
   while(!add_group_client.call(add_group_srv));
 
@@ -129,7 +344,8 @@ int main(int argc, char **argv)
   feedback.velocity.reserve(leg_components);
   feedback.effort.reserve(leg_components);
 
-  /*initial_pos.position.reserve(leg_components);
+  /*
+  initial_pos.position.reserve(leg_components);
   initial_pos.velocity.reserve(leg_components);
   initial_pos.effort.reserve(leg_components);*/
 
@@ -143,9 +359,9 @@ int main(int argc, char **argv)
   command_msg.name.push_back("leg1/hip1");
   command_msg.name.push_back("leg1/femur1");
   command_msg.name.push_back("leg1/tibia1");
-  /*command_msg.name.push_back("leg2/hip2");
+  command_msg.name.push_back("leg2/hip2");
   command_msg.name.push_back("leg2/femur2");
-  command_msg.name.push_back("leg2/tibia2");*/
+  command_msg.name.push_back("leg2/tibia2");
   command_msg.name.push_back("leg3/hip3");
   command_msg.name.push_back("leg3/femur3");
   command_msg.name.push_back("leg3/tibia3");
@@ -164,31 +380,40 @@ int main(int argc, char **argv)
 
   // Wait until we have some feedback from the actuator.
   ROS_INFO("Waiting for initial feedback");
-  while (!feedbackvalid) {
+  while (!feedbackvalid)
+  {
       ros::spinOnce();
       loop_rate.sleep();
   }
   ROS_INFO("Initial feedback received");
 
+  moving.data = true;
+
   // Prep the servo loop.
   double  dt = loop_rate.expectedCycleTime().toSec();
   double  speed = 1.0;          // Speed to reach goal.
+  bool go = false;
 
-  while (ros::ok) {
-    if (!moving.data) {
+  while (ros::ok)
+  {
+    if (!moving.data)
+    {
       // Send over next target position
-      stand();
+      //if (standing_queue.data.empty())
+      if (!go)
+      {
+        stand();
+        go = true;
+      }
 
       current_pos = standing_queue.data.back();
       standing_queue.data.pop_back(); 
 
       goal_publisher.publish(current_pos);
       moving.data = true;
-    } 
+    }
 
     ros::spinOnce();
     loop_rate.sleep();
-
   }
-
 }

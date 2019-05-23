@@ -18,21 +18,22 @@ sensor_msgs::JointState rviz_command_msg;
 using namespace std;
 using namespace hebiros;
 
-int leg_components = 15;
-vector<vector<float>> queue; 
+int leg_components = 18;
+vector<vector<float>> queue;
 vector<float> next_set;
 vector<double> goalpos(leg_components);        // The goal position
+vector<double> goaleffort(leg_components);     // The efforts
 volatile int            feedbackvalid = 0;
 sensor_msgs::JointState feedback;       // The actuator feedback struccture
 sensor_msgs::JointState initial_pos;
-double d = 5;
+double d = 10;
 // max seconds to move between points
-double moving_time = 5; 
+double moving_time = 5;
 std_msgs::Bool moving;
 bool newGoal;
 bool standing = false;
-double current_time, timeSince; 
-string status; 
+double current_time, timeSince;
+string status;
 
 /*
 **   Feedback Subscriber Callback
@@ -50,19 +51,19 @@ void feedbackCallback(sensor_msgs::JointState data)
 void goalCallback(const hexapod::Instruction data)
 {
   ROS_INFO("goal_talking");
-  goalpos = data.data;
+  goalpos = data.positions;
+  goaleffort = data.efforts;
   newGoal = true;
   status = data.header;
 }
 
-
 int main(int argc, char **argv)
-{ 
+{
   // Initialize the basic ROS node, run at 200Hz.
   ros::init(argc, argv, "tripod_gait");
   ros::NodeHandle n;
   ros::Rate loop_rate(200);
-  moving.data = false;
+  goalpos.clear();
   
   current_time = ros::Time::now().toSec(); 
   // Ask the Hebi node to list the modules.  Create a client to their
@@ -79,12 +80,28 @@ int main(int argc, char **argv)
   ros::ServiceClient add_group_client = n.serviceClient<AddGroupFromNamesSrv>("/hebiros/add_group_from_names");
   AddGroupFromNamesSrv add_group_srv;
   add_group_srv.request.group_name = group_name;
-  add_group_srv.request.names = {"hip1", "femur1", "tibia1", //"hip2", "femur2", "tibia2",
-                                 "hip3", "femur3", "tibia3", "hip4", "femur4", "tibia4",
-                                 "hip5", "femur5", "tibia5", "hip6", "femur6", "tibia6"};
-  add_group_srv.request.families = {"leg1", "leg1", "leg1", //"leg2", "leg2", "leg2", 
-                                    "leg3", "leg3", "leg3", "leg4", "leg4", "leg4",
-                                    "leg5", "leg5", "leg5", "leg6", "leg6", "leg6"};
+  add_group_srv.request.names = {
+                                 ///*
+                                 "hip1", "femur1", "tibia1",
+                                 "hip2", "femur2", "tibia2",
+                                 "hip3", "femur3", "tibia3",
+                                 "hip4", "femur4", "tibia4",
+                                 "hip5", "femur5", "tibia5",
+                                 "hip6", "femur6", "tibia6"
+                                 //*/
+                                };
+
+  add_group_srv.request.families = {
+                                    ///*
+                                    "leg1", "leg1", "leg1",
+                                    "leg2", "leg2", "leg2", 
+                                    "leg3", "leg3", "leg3",
+                                    "leg4", "leg4", "leg4",
+                                    "leg5", "leg5", "leg5",
+                                    "leg6", "leg6", "leg6"
+                                    //*/
+                                   };
+
   // Repeatedly call the service until it succeeds.
   while(!add_group_client.call(add_group_srv)) ;
 
@@ -118,9 +135,9 @@ int main(int argc, char **argv)
   command_msg.name.push_back("leg1/hip1");
   command_msg.name.push_back("leg1/femur1");
   command_msg.name.push_back("leg1/tibia1");
-  /*command_msg.name.push_back("leg2/hip2");
+  command_msg.name.push_back("leg2/hip2");
   command_msg.name.push_back("leg2/femur2");
-  command_msg.name.push_back("leg2/tibia2");*/
+  command_msg.name.push_back("leg2/tibia2");
   command_msg.name.push_back("leg3/hip3");
   command_msg.name.push_back("leg3/femur3");
   command_msg.name.push_back("leg3/tibia3");
@@ -137,7 +154,6 @@ int main(int argc, char **argv)
   command_msg.velocity.resize(leg_components);
   command_msg.effort.resize(leg_components);
 
-  moving_publisher.publish(moving);
   // Wait until we have some feedback from the actuator.
   ROS_INFO("Waiting for initial feedback");
   while (!feedbackvalid)  {
@@ -145,83 +161,134 @@ int main(int argc, char **argv)
       loop_rate.sleep();
   }
   ROS_INFO("Initial feedback received");
+  moving.data = false;
+  moving_publisher.publish(moving);
 
   // Prep the servo loop.
   double  dt = loop_rate.expectedCycleTime().toSec();
   double  speed = 1.0;          // Speed to reach goal.
 
-  while(ros::ok())  { 
+  while(ros::ok())
+  { 
     timeSince = ros::Time::now().toSec() - current_time;
 
-    if (newGoal && status != "final") { 
+    if (newGoal)
+    {
       // Got a new target
       initial_pos = feedback;
       newGoal = false;
-      current_time = ros::Time::now().toSec(); 
-      timeSince = 0; 
+      current_time = ros::Time::now().toSec();
+      timeSince = 0;
       moving.data = true;
       moving_publisher.publish(moving);
-    } 
+    }
 
-    while (timeSince < moving_time && !goalpos.empty()) {
+    while (timeSince < moving_time && !goalpos.empty())
+    {
       // Keep moving towards the new point using min-jerk trajectory
-      for (int i = 0; i < leg_components; i++) {
+      for (int i = 0; i < leg_components; i++)
+      {
         // Test the first leg first.
-        if (i == 0 || i == 1 || i == 2) { 
-        command_msg.position[i] = initial_pos.position[i] + 
-                                  (goalpos[i] - initial_pos.position[i]) * 
-                                  (10*(timeSince/moving_time)*(timeSince/moving_time)*
-                                   (timeSince/moving_time) - 
-                                   15*(timeSince/moving_time)*(timeSince/moving_time)*
-                                   (timeSince/moving_time)*(timeSince/moving_time) + 
-                                   6*(timeSince/moving_time)*(timeSince/moving_time)*
-                                   (timeSince/moving_time)*(timeSince/moving_time)*
-                                   (timeSince/moving_time)); 
+        //if (i == 0 || i == 1 || i == 2)
 
-        } else {
-        command_msg.position[i] = feedback.position[i];
+        if (true)
+        {
+          command_msg.position[i] = initial_pos.position[i] + 
+                                    (goalpos[i] - initial_pos.position[i]) * 
+                                    (10 * (timeSince/moving_time) *
+                                    (timeSince/moving_time) *
+                                    (timeSince/moving_time) - 
+                                    15 * (timeSince/moving_time) *
+                                    (timeSince/moving_time) *
+                                    (timeSince/moving_time) *
+                                    (timeSince/moving_time) + 
+                                    6 * (timeSince/moving_time) *
+                                    (timeSince/moving_time) *
+                                    (timeSince/moving_time) *
+                                    (timeSince/moving_time) *
+                                    (timeSince/moving_time)); 
+
+          //command_msg.effort[i] = goaleffort[i];
+          command_msg.effort[i] = initial_pos.effort[i] + 
+                                  (goaleffort[i] - initial_pos.effort[i]) * 
+                                  (10 * (timeSince/moving_time) *
+                                  (timeSince/moving_time) *
+                                  (timeSince/moving_time) - 
+                                  15 * (timeSince/moving_time) *
+                                  (timeSince/moving_time) *
+                                  (timeSince/moving_time) *
+                                  (timeSince/moving_time) + 
+                                  6 * (timeSince/moving_time) *
+                                  (timeSince/moving_time) *
+                                  (timeSince/moving_time) *
+                                  (timeSince/moving_time) *
+                                  (timeSince/moving_time)); 
+
+
+          if (feedback.position[i] > 1.1)
+            command_msg.effort[i] = goaleffort[i] - 1;
+          else
+            command_msg.effort[i] = goaleffort[i];
+        }
+        else
+        {
+          command_msg.position[i] = feedback.position[i];
+          command_msg.effort[i] = feedback.effort[i];
         }
       }
 
       timeSince = ros::Time::now().toSec() - current_time;
       command_publisher.publish(command_msg);
-      standing = true;
+      //standing = true;
     } 
 
-    if (status=="final") {
+    //if (status == "final")
+    if (status == "final")
+    {
       // Maintain previous position
-      if (!goalpos.empty()) {
-        command_msg.position[0] = goalpos[0]; 
-        command_msg.position[1] = goalpos[1]; 
-        command_msg.position[2] = goalpos[2]; 
-        command_msg.position[3] = feedback.position[3]; 
-        command_msg.position[4] = feedback.position[4]; 
-        command_msg.position[5] = feedback.position[5]; 
-        command_msg.position[6] = feedback.position[6]; 
-        command_msg.position[7] = feedback.position[7]; 
-        command_msg.position[8] = feedback.position[8]; 
-        command_msg.position[9] = feedback.position[9]; 
-        command_msg.position[10] = feedback.position[10]; 
-        command_msg.position[11] = feedback.position[11]; 
-        command_msg.position[12] = feedback.position[12]; 
-        command_msg.position[13] = feedback.position[13]; 
-        command_msg.position[14] = feedback.position[14]; 
-        command_msg.position[15] = feedback.position[15]; 
-        command_msg.position[16] = feedback.position[16]; 
-        command_msg.position[17] = feedback.position[17]; 
-        command_publisher.publish(command_msg);
-      } else {
-        command_msg.position = feedback.position;
+      if (!goalpos.empty() && !goaleffort.empty())
+      {
+        for (int i = 0; i < leg_components; i++)
+        {
+          command_msg.position[i] = goalpos[i];
+          command_msg.effort[i] = goaleffort[i];
+        }
+
+        /*
+        command_msg.position[3] = feedback.position[3];
+        command_msg.position[4] = feedback.position[4];
+        command_msg.position[5] = feedback.position[5];
+        command_msg.position[6] = feedback.position[6];
+        command_msg.position[7] = feedback.position[7];
+        command_msg.position[8] = feedback.position[8];
+        command_msg.position[9] = feedback.position[9];
+        command_msg.position[10] = feedback.position[10];
+        command_msg.position[11] = feedback.position[11];
+        command_msg.position[12] = feedback.position[12];
+        command_msg.position[13] = feedback.position[13];
+        command_msg.position[14] = feedback.position[14];
+        command_msg.position[15] = feedback.position[15];
+        command_msg.position[16] = feedback.position[16];
+        command_msg.position[17] = feedback.position[17];
+        //*/
+
         command_publisher.publish(command_msg);
       }
-    } else {
+      else
+      {
+        command_msg.position = feedback.position;
+        command_msg.effort = feedback.effort;
+        command_publisher.publish(command_msg);
+      }
+    }
+    else
+    {
       // Ready to receive new position command
-      moving.data = false; 
+      moving.data = false;
       moving_publisher.publish(moving);
     }
 
     ros::spinOnce();
     loop_rate.sleep();
-
-    } 
+  }
 }
