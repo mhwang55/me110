@@ -6,6 +6,8 @@
 #include "stdint.h"
 #include "math.h"
 #include <visualization_msgs/Marker.h>
+#include "hexapod/Instruction.h"
+#include "hexapod/InstructionQueue.h"
 #include "hebiros/AddGroupFromNamesSrv.h"
 #include "geometry_msgs/Polygon.h"
 #include "hebiros/EntryListSrv.h"
@@ -18,8 +20,10 @@ using namespace hebiros;
 
 std_msgs::Bool moving;
 
-std_msgs::Float64MultiArray standing_queue;
-int leg_components = 18;
+hexapod::InstructionQueue standing_queue;
+hexapod::Instruction standing_pos;
+hexapod::Instruction current_pos;
+int leg_components = 15;
 
 sensor_msgs::JointState feedback;       // The actuator feedback struccture
 volatile int            feedbackvalid = 0;
@@ -39,20 +43,36 @@ void feedbackCallback(sensor_msgs::JointState data)
 }
 
 void stand() { 
-  // Create a queue of standing positions.
-  for (int i = 0; i < leg_components; i++) { 
-    if ((i % 3) == 0) {
-      standing_queue.data.push_back(0);
-    } else if ((i % 3) == 1) { 
-      if ((i % 2) == 0) { 
-        standing_queue.data.push_back(-M_PI/2);
-      } else { 
-        standing_queue.data.push_back(M_PI/2);
+  for (int i = 0; i < 2; i++) {
+    standing_pos.data.clear();
+    // Create a queue of standing positions.
+    if (i == 0) { 
+      for (int j = 0; j < leg_components; i++) {
+        standing_pos.data.push_back(0.);
       }
     } else {
-      standing_queue.data.push_back(0.);
+      for (int j = 0; j < leg_components; j++) {
+        if (j % 3 == 2) {
+          if (j % 2 == 0) { 
+            standing_pos.data.push_back(-M_PI/2);
+          } else { 
+            standing_pos.data.push_back(M_PI/2);
+          }
+        } else { 
+          standing_pos.data.push_back(0.);
+        }
+      }
     }
+
+    if (i == 2) {
+      standing_pos.header = "standing";
+    } else { 
+      standing_pos.header = "final";
+    }
+    standing_queue.data.push_back(standing_pos);
+
   } 
+  reverse(standing_queue.data.begin(), standing_queue.data.end());
 }
 
 void walkTripod() { 
@@ -83,10 +103,10 @@ int main(int argc, char **argv)
   ros::ServiceClient add_group_client = n.serviceClient<AddGroupFromNamesSrv>("/hebiros/add_group_from_names");
   AddGroupFromNamesSrv add_group_srv;
   add_group_srv.request.group_name = group_name;
-  add_group_srv.request.names = {"hip1", "femur1", "tibia1", "hip2", "femur2", "tibia2",
+  add_group_srv.request.names = {"hip1", "femur1", "tibia1", //"hip2", "femur2", "tibia2",
                                  "hip3", "femur3", "tibia3", "hip4", "femur4", "tibia4",
                                  "hip5", "femur5", "tibia5", "hip6", "femur6", "tibia6"};
-  add_group_srv.request.families = {"leg1", "leg1", "leg1", "leg2", "leg2", "leg2", 
+  add_group_srv.request.families = {"leg1", "leg1", "leg1", //"leg2", "leg2", "leg2", 
                                     "leg3", "leg3", "leg3", "leg4", "leg4", "leg4",
                                     "leg5", "leg5", "leg5", "leg6", "leg6", "leg6"};
   // Repeatedly call the service until it succeeds.
@@ -117,15 +137,15 @@ int main(int argc, char **argv)
   // ros::Publisher command_publisher = n.advertise<sensor_msgs::JointState>("/hebiros/"+group_name+"/command/joint_state", 100);
 
   // GoalPos publisher
-  ros::Publisher goal_publisher = n.advertise<std_msgs::Float64MultiArray>("goal", 100);
+  ros::Publisher goal_publisher = n.advertise<hexapod::Instruction>("goal", 100);
 
   sensor_msgs::JointState command_msg;
   command_msg.name.push_back("leg1/hip1");
   command_msg.name.push_back("leg1/femur1");
   command_msg.name.push_back("leg1/tibia1");
-  command_msg.name.push_back("leg2/hip2");
+  /*command_msg.name.push_back("leg2/hip2");
   command_msg.name.push_back("leg2/femur2");
-  command_msg.name.push_back("leg2/tibia2");
+  command_msg.name.push_back("leg2/tibia2");*/
   command_msg.name.push_back("leg3/hip3");
   command_msg.name.push_back("leg3/femur3");
   command_msg.name.push_back("leg3/tibia3");
@@ -153,16 +173,17 @@ int main(int argc, char **argv)
   // Prep the servo loop.
   double  dt = loop_rate.expectedCycleTime().toSec();
   double  speed = 1.0;          // Speed to reach goal.
-  double  cmdpos = feedback.position[0];
-  double  cmdvel = 0.0;
 
   while (ros::ok) {
-
     if (!moving.data) {
       // Send over next target position
       stand();
-      goal_publisher.publish(standing_queue);
-      standing_queue.data.clear();
+
+      current_pos = standing_queue.data.back();
+      standing_queue.data.pop_back(); 
+
+      goal_publisher.publish(current_pos);
+      moving.data = true;
     } 
 
     ros::spinOnce();

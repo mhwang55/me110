@@ -2,6 +2,7 @@
 #include "std_msgs/Float64.h"
 #include "std_msgs/Bool.h"
 #include "std_msgs/Float64MultiArray.h"
+#include "hexapod/Instruction.h"
 #include "sensor_msgs/JointState.h"
 #include "stdint.h"
 #include "math.h"
@@ -17,9 +18,10 @@ sensor_msgs::JointState rviz_command_msg;
 using namespace std;
 using namespace hebiros;
 
+int leg_components = 15;
 vector<vector<float>> queue; 
 vector<float> next_set;
-std_msgs::Float64MultiArray goalpos;        // The goal position
+vector<double> goalpos(leg_components);        // The goal position
 volatile int            feedbackvalid = 0;
 sensor_msgs::JointState feedback;       // The actuator feedback struccture
 sensor_msgs::JointState initial_pos;
@@ -28,7 +30,9 @@ double d = 5;
 double moving_time = 5; 
 std_msgs::Bool moving;
 bool newGoal;
+bool standing = false;
 double current_time, timeSince; 
+string status; 
 
 /*
 **   Feedback Subscriber Callback
@@ -43,10 +47,12 @@ void feedbackCallback(sensor_msgs::JointState data)
 /*
 **   Goal Subscriber Callback
 */
-void goalCallback(const std_msgs::Float64MultiArray data)
+void goalCallback(const hexapod::Instruction data)
 {
-  goalpos = data;
+  ROS_INFO("goal_talking");
+  goalpos = data.data;
   newGoal = true;
+  status = data.header;
 }
 
 
@@ -73,10 +79,10 @@ int main(int argc, char **argv)
   ros::ServiceClient add_group_client = n.serviceClient<AddGroupFromNamesSrv>("/hebiros/add_group_from_names");
   AddGroupFromNamesSrv add_group_srv;
   add_group_srv.request.group_name = group_name;
-  add_group_srv.request.names = {"hip1", "femur1", "tibia1", "hip2", "femur2", "tibia2",
+  add_group_srv.request.names = {"hip1", "femur1", "tibia1", //"hip2", "femur2", "tibia2",
                                  "hip3", "femur3", "tibia3", "hip4", "femur4", "tibia4",
                                  "hip5", "femur5", "tibia5", "hip6", "femur6", "tibia6"};
-  add_group_srv.request.families = {"leg1", "leg1", "leg1", "leg2", "leg2", "leg2", 
+  add_group_srv.request.families = {"leg1", "leg1", "leg1", //"leg2", "leg2", "leg2", 
                                     "leg3", "leg3", "leg3", "leg4", "leg4", "leg4",
                                     "leg5", "leg5", "leg5", "leg6", "leg6", "leg6"};
   // Repeatedly call the service until it succeeds.
@@ -90,8 +96,6 @@ int main(int argc, char **argv)
 
   // Create a subscriber to listen for a goal pos.
   ros::Subscriber goalSubscriber = n.subscribe("goal", 100, goalCallback);
-
-  int leg_components = 18;
 
   // Create a subscriber to receive feedback from the actuator group.
   ros::Subscriber feedback_subscriber = n.subscribe("/hebiros/"+group_name+"/feedback/joint_state", 100, feedbackCallback);
@@ -114,9 +118,9 @@ int main(int argc, char **argv)
   command_msg.name.push_back("leg1/hip1");
   command_msg.name.push_back("leg1/femur1");
   command_msg.name.push_back("leg1/tibia1");
-  command_msg.name.push_back("leg2/hip2");
+  /*command_msg.name.push_back("leg2/hip2");
   command_msg.name.push_back("leg2/femur2");
-  command_msg.name.push_back("leg2/tibia2");
+  command_msg.name.push_back("leg2/tibia2");*/
   command_msg.name.push_back("leg3/hip3");
   command_msg.name.push_back("leg3/femur3");
   command_msg.name.push_back("leg3/tibia3");
@@ -145,55 +149,79 @@ int main(int argc, char **argv)
   // Prep the servo loop.
   double  dt = loop_rate.expectedCycleTime().toSec();
   double  speed = 1.0;          // Speed to reach goal.
-  double  cmdpos = feedback.position[0];
-  double  cmdvel = 0.0;
 
   while(ros::ok())  { 
     timeSince = ros::Time::now().toSec() - current_time;
 
-    if (newGoal) { 
+    if (newGoal && status != "final") { 
       // Got a new target
       initial_pos = feedback;
       newGoal = false;
       current_time = ros::Time::now().toSec(); 
-      timeSince = 0.; 
+      timeSince = 0; 
       moving.data = true;
       moving_publisher.publish(moving);
     } 
 
-    if (timeSince < moving_time && !goalpos.data.empty()) {
+    while (timeSince < moving_time && !goalpos.empty()) {
       // Keep moving towards the new point using min-jerk trajectory
       for (int i = 0; i < leg_components; i++) {
         // Test the first leg first.
         if (i == 0 || i == 1 || i == 2) { 
         command_msg.position[i] = initial_pos.position[i] + 
-                                  (goalpos.data[i] - initial_pos.position[i]) * 
-                                  (10*(timeSince/10)*moving_time*(timeSince/10)*
-                                   moving_time*(timeSince/10) - 
-                                   15*moving_time*(timeSince/10)*moving_time*(timeSince/10)*
-                                   moving_time*(timeSince/10)*moving_time*(timeSince/10) + 
-                                   6*moving_time*(timeSince/10)*moving_time*(timeSince/10)*
-                                   moving_time*(timeSince/10)*moving_time*(timeSince/10)*
-                                   moving_time*(timeSince/10)); 
+                                  (goalpos[i] - initial_pos.position[i]) * 
+                                  (10*(timeSince/moving_time)*(timeSince/moving_time)*
+                                   (timeSince/moving_time) - 
+                                   15*(timeSince/moving_time)*(timeSince/moving_time)*
+                                   (timeSince/moving_time)*(timeSince/moving_time) + 
+                                   6*(timeSince/moving_time)*(timeSince/moving_time)*
+                                   (timeSince/moving_time)*(timeSince/moving_time)*
+                                   (timeSince/moving_time)); 
+
         } else {
         command_msg.position[i] = feedback.position[i];
         }
       }
 
       timeSince = ros::Time::now().toSec() - current_time;
-      moving.data = true;
-      moving_publisher.publish(moving);
       command_publisher.publish(command_msg);
-    } else { 
+      standing = true;
+    } 
+
+    if (status=="final") {
+      // Maintain previous position
+      if (!goalpos.empty()) {
+        command_msg.position[0] = goalpos[0]; 
+        command_msg.position[1] = goalpos[1]; 
+        command_msg.position[2] = goalpos[2]; 
+        command_msg.position[3] = feedback.position[3]; 
+        command_msg.position[4] = feedback.position[4]; 
+        command_msg.position[5] = feedback.position[5]; 
+        command_msg.position[6] = feedback.position[6]; 
+        command_msg.position[7] = feedback.position[7]; 
+        command_msg.position[8] = feedback.position[8]; 
+        command_msg.position[9] = feedback.position[9]; 
+        command_msg.position[10] = feedback.position[10]; 
+        command_msg.position[11] = feedback.position[11]; 
+        command_msg.position[12] = feedback.position[12]; 
+        command_msg.position[13] = feedback.position[13]; 
+        command_msg.position[14] = feedback.position[14]; 
+        command_msg.position[15] = feedback.position[15]; 
+        command_msg.position[16] = feedback.position[16]; 
+        command_msg.position[17] = feedback.position[17]; 
+        command_publisher.publish(command_msg);
+      } else {
+        command_msg.position = feedback.position;
+        command_publisher.publish(command_msg);
+      }
+    } else {
       // Ready to receive new position command
       moving.data = false; 
       moving_publisher.publish(moving);
-    } 
+    }
 
     ros::spinOnce();
     loop_rate.sleep();
 
-  }
-
-
+    } 
 }
