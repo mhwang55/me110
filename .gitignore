@@ -1,3 +1,4 @@
 build/*
 devel/*
-
+src/C*
+src/hebi*
