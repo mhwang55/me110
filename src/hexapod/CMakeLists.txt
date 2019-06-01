@@ -136,6 +136,7 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_urdf src/urdf_joint_state_pub.cpp)
+add_executable(${PROJECT_NAME}_control src/tripod_control.cpp)
 add_executable(${PROJECT_NAME}_gait src/tripod_gait.cpp)
 add_executable(${PROJECT_NAME}_brain src/tripod_brain.cpp)
 
@@ -149,6 +150,7 @@ add_executable(${PROJECT_NAME}_brain src/tripod_brain.cpp)
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_urdf ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(${PROJECT_NAME}_gait ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME}_control ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(${PROJECT_NAME}_brain ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
@@ -157,6 +159,9 @@ add_dependencies(${PROJECT_NAME}_brain ${${PROJECT_NAME}_EXPORTED_TARGETS} ${cat
 # )
 
 target_link_libraries(${PROJECT_NAME}_gait
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(${PROJECT_NAME}_control
   ${catkin_LIBRARIES}
 )
 target_link_libraries(${PROJECT_NAME}_brain

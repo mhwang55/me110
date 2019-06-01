@@ -3,6 +3,7 @@
 
   <node name="tripod_brain" pkg="hexapod" type="hexapod_brain" respawn="false" output="screen"/>
   <node name="tripod_gait" pkg="hexapod" type="hexapod_gait" respawn="false" output="screen"/>
+  <node name="tripod_control" pkg="hexapod" type="hexapod_control" respawn="false" output="screen"/>
   <node name="hebiros_node" pkg="hebiros" type="hebiros_node" respawn="false" output="screen"/>
 
 

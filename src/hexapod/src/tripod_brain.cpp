@@ -19,18 +19,35 @@ using namespace std;
 using namespace hebiros;
 
 std_msgs::Bool moving;
+std_msgs::Bool alive;
 
 hexapod::InstructionQueue standing_queue;
 hexapod::Instruction standing_pos;
 hexapod::Instruction current_pos;
-int leg_components = 18;
-//int leg_components = 3;
+//int leg_components = 18;
+int leg_components = 6;
 
 sensor_msgs::JointState feedback;       // The actuator feedback struccture
+volatile bool           getGoal;
 volatile int            feedbackvalid = 0;
 
-void movingCallback(std_msgs::Bool data) { 
+double startTime, currTime;
+
+void movingCallback(std_msgs::Bool data)
+{
   moving = data;
+  //ROS_INFO("moving callback: %d", moving.data);
+}
+
+void getGoalCallback(std_msgs::Bool data)
+{
+  currTime = ros::Time::now().toSec();
+  if (data.data == true && currTime - startTime > 1)
+    getGoal = data.data;
+  else
+    getGoal = false;
+
+  ROS_INFO("new goal callback: %d", getGoal);
 }
 
 /*
@@ -56,6 +73,7 @@ void stand()
 
     // Create a queue of standing positions.
     if (i == 0)
+    //if (true)
     {
       for (int j = 0; j < leg_components; j++)
       {
@@ -83,7 +101,20 @@ void stand()
         }
         //*/
       }
+
+      standing_pos.state = 0;
     }
+    /*
+    else if (i == 1)
+    {
+      for (int j = 0; j < leg_components; j++)
+      {
+        standing_pos.positions.push_back(0.);
+      }
+    }
+    //*/
+ 
+    //else if (false)
     else if (i == 1)
     {
       for (int j = 0; j < leg_components; j++)
@@ -162,8 +193,11 @@ void stand()
           //*/
         }
       }
+
+      standing_pos.state = 1;
     }
     else
+    //else if (false)
     {
       for (int j = 0; j < leg_components; j++)
       {
@@ -261,6 +295,8 @@ void stand()
         }
         */
       }
+
+      standing_pos.state = 2;
     }
 
     if (i == 2)
@@ -276,6 +312,15 @@ void stand()
   }
 
   reverse(standing_queue.data.begin(), standing_queue.data.end());
+
+  ROS_INFO("done");
+  ROS_INFO("stand3: %zd", standing_queue.data.size());
+  /*
+  for (int i = 0; i < sizeof(standing_queue.data) / sizeof(standing_queue.data[0]); i++)
+  {
+    ROS_INFO("stand: %f", standing_queue.data[i].positions[1]);
+  }
+  */
 }
 
 void walkTripod() { 
@@ -336,6 +381,8 @@ int main(int argc, char **argv)
   // Subscriber to listen to whether the robot is moving.
   ros::Subscriber movingSubscriber = n.subscribe("/moving", 100, movingCallback);
 
+  ros::Subscriber getGoalSubscriber = n.subscribe("/getGoal", 100, getGoalCallback);
+
 
   // Create a subscriber to receive feedback from the actuator group.
   ros::Subscriber feedback_subscriber = n.subscribe("/hebiros/"+group_name+"/feedback/joint_state", 100, feedbackCallback);
@@ -353,7 +400,9 @@ int main(int argc, char **argv)
   // ros::Publisher command_publisher = n.advertise<sensor_msgs::JointState>("/hebiros/"+group_name+"/command/joint_state", 100);
 
   // GoalPos publisher
-  ros::Publisher goal_publisher = n.advertise<hexapod::Instruction>("goal", 100);
+  ros::Publisher goal_publisher = n.advertise<hexapod::Instruction>("/goal", 100);
+
+  ros::Publisher alivePublisher = n.advertise<std_msgs::Bool>("/alive", 100);
 
   sensor_msgs::JointState command_msg;
   command_msg.name.push_back("leg1/hip1");
@@ -382,20 +431,73 @@ int main(int argc, char **argv)
   ROS_INFO("Waiting for initial feedback");
   while (!feedbackvalid)
   {
-      ros::spinOnce();
-      loop_rate.sleep();
+    alive.data = false;
+    alivePublisher.publish(alive);
+    ros::spinOnce();
+    loop_rate.sleep();
   }
-  ROS_INFO("Initial feedback received");
+  ROS_INFO("Brain initial feedback received");
 
-  moving.data = true;
+  moving.data = false;
 
   // Prep the servo loop.
   double  dt = loop_rate.expectedCycleTime().toSec();
   double  speed = 1.0;          // Speed to reach goal.
   bool go = false;
+  bool published = false;
+
+  current_pos.header = "NULL";
+  getGoal = false;
+
+  startTime = ros::Time::now().toSec();
 
   while (ros::ok)
   {
+    alive.data = true;
+    alivePublisher.publish(alive);
+    if (moving.data)
+    {
+      // Send over next target position
+      if (!go)
+      {
+        stand();
+        go = true;
+      }
+  
+      if (!published)
+      {
+        ROS_INFO("size before: %zd", standing_queue.data.size());
+        current_pos = standing_queue.data.back();
+        standing_queue.data.pop_back(); 
+        published = true;
+        ROS_INFO("published: %f", current_pos.positions[1]);
+        ROS_INFO("size after: %zd", standing_queue.data.size());
+        //goal_publisher.publish(current_pos);
+      }
+      else if (getGoal)
+      {
+        //ROS_INFO("*************get goal");
+
+        startTime = ros::Time::now().toSec();
+
+        ROS_INFO("size get before: %zd", standing_queue.data.size());
+        current_pos = standing_queue.data.back();
+        standing_queue.data.pop_back(); 
+        getGoal = false;
+        //goal_publisher.publish(current_pos);
+        ROS_INFO("published get: %f", current_pos.positions[1]);
+
+        ROS_INFO("size get after: %zd", standing_queue.data.size());
+      }
+      ///*
+      if (current_pos.header != "NULL")
+        goal_publisher.publish(current_pos);
+      //*/
+    }
+
+
+    /*
+    ROS_INFO("Is moving? %d", moving.data);
     if (!moving.data)
     {
       // Send over next target position
@@ -406,12 +508,23 @@ int main(int argc, char **argv)
         go = true;
       }
 
-      current_pos = standing_queue.data.back();
-      standing_queue.data.pop_back(); 
 
-      goal_publisher.publish(current_pos);
+      if (!published)
+      {
+        current_pos = standing_queue.data.back();
+        standing_queue.data.pop_back(); 
+        goal_publisher.publish(current_pos);
+        published = true;
+      }
+
       moving.data = true;
+      ROS_INFO("********data positions: %f", current_pos.positions[1]);
     }
+    if (getGoal.data)
+    {
+      published = false;
+    }
+    */
 
     ros::spinOnce();
     loop_rate.sleep();
