@@ -20,8 +20,8 @@ std_msgs::Bool haveGoal;
 using namespace std;
 using namespace hebiros;
 
-//int leg_components = 18;
-int leg_components = 6;
+//int leg_components = 6;
+int leg_components = 18;
 vector<vector<float>> queue;
 vector<float> next_set;
 vector<double> goalPositions(leg_components);        // The goal position

@@ -24,14 +24,18 @@ std_msgs::Bool alive;
 hexapod::InstructionQueue standing_queue;
 hexapod::Instruction standing_pos;
 hexapod::Instruction current_pos;
-//int leg_components = 18;
-int leg_components = 6;
+int leg_components = 18;
+//int leg_components = 6;
 
 sensor_msgs::JointState feedback;       // The actuator feedback struccture
 volatile bool           getGoal;
 volatile int            feedbackvalid = 0;
 
 double startTime, currTime;
+
+double pos1 = M_PI / 2 + 0.5;
+double pos2 = M_PI / 2 + 0.5;
+//double eff1 = M_PI / 2;
 
 void movingCallback(std_msgs::Bool data)
 {
@@ -47,7 +51,7 @@ void getGoalCallback(std_msgs::Bool data)
   else
     getGoal = false;
 
-  ROS_INFO("new goal callback: %d", getGoal);
+  //ROS_INFO("new goal callback: %d", getGoal);
 }
 
 /*
@@ -123,27 +127,27 @@ void stand()
         {
           if (j == 16)
           {
-            standing_pos.positions.push_back(-M_PI / 2);
+            standing_pos.positions.push_back(-pos1);
             standing_pos.efforts.push_back(-effortFemurDown);
           }
           else if (j == 1)
           {
-            standing_pos.positions.push_back(M_PI / 2);
+            standing_pos.positions.push_back(pos1);
             standing_pos.efforts.push_back(11);
           }
           else if (j == 4)
           {
-            standing_pos.positions.push_back(-M_PI / 2);
+            standing_pos.positions.push_back(-pos1);
             standing_pos.efforts.push_back(-10);
           }
           else if (j % 2 == 0)
           {
-            standing_pos.positions.push_back(-M_PI / 2);
+            standing_pos.positions.push_back(-pos1);
             standing_pos.efforts.push_back(-effortFemurDown - 1);
           }
           else
           {
-            standing_pos.positions.push_back(M_PI / 2);
+            standing_pos.positions.push_back(pos1);
             standing_pos.efforts.push_back(effortFemurDown);
           }
         }
@@ -205,27 +209,27 @@ void stand()
         {
           if (j == 16)
           {
-            standing_pos.positions.push_back(-M_PI / 2);
+            standing_pos.positions.push_back(-pos1);
             standing_pos.efforts.push_back(-effortFemurDownFinal);
           }
           else if (j == 1)
           {
-            standing_pos.positions.push_back(M_PI / 2);
+            standing_pos.positions.push_back(pos2);
             standing_pos.efforts.push_back(effortFemurDownFinal + 3);
           }
           else if (j == 4)
           {
-            standing_pos.positions.push_back(-M_PI / 2);
+            standing_pos.positions.push_back(-pos2);
             standing_pos.efforts.push_back(-effortFemurDownFinal - 2);
           }
           else if (j % 2 == 0)
           {
-            standing_pos.positions.push_back(-M_PI / 2);
+            standing_pos.positions.push_back(-pos1);
             standing_pos.efforts.push_back(-effortFemurDownFinal - 1);
           }
           else
           {
-            standing_pos.positions.push_back(M_PI / 2);
+            standing_pos.positions.push_back(pos1);
             standing_pos.efforts.push_back(effortFemurDownFinal);
           }
  
@@ -476,8 +480,6 @@ int main(int argc, char **argv)
       }
       else if (getGoal)
       {
-        //ROS_INFO("*************get goal");
-
         startTime = ros::Time::now().toSec();
 
         ROS_INFO("size get before: %zd", standing_queue.data.size());
