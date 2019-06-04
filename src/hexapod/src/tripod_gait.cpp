@@ -155,7 +155,7 @@ int main(int argc, char **argv)
       for (int i = 0; i < leg_components; i++)
       {
         command_msg.position[i] = goalPositions[i];
-        command_msg.effort[i] = goalEfforts[i];
+        //command_msg.effort[i] = goalEfforts[i];
 
         //ROS_INFO("****CMD: %f", command_msg.position[1]);
       }

@@ -1,0 +1,9 @@
+<launch>
+
+
+  <node name="tripod_brainOld" pkg="hexapod" type="hexapod_brainOld" respawn="false" output="screen"/>
+  <node name="tripod_gaitOld" pkg="hexapod" type="hexapod_gaitOld" respawn="false" output="screen"/>
+  <node name="hebiros_node" pkg="hebiros" type="hebiros_node" respawn="false" output="screen"/>
+
+
+</launch>

@@ -1,8 +1,9 @@
 #include "ros/ros.h"
+#include <ros/callback_queue.h>
 #include "std_msgs/Float64.h"
 #include "std_msgs/Bool.h"
 #include "std_msgs/Float64MultiArray.h"
-#include "hexapod/Instruction.h"
+#include "hexapod/InstructionOld.h"
 #include "sensor_msgs/JointState.h"
 #include "stdint.h"
 #include "math.h"
@@ -20,15 +21,13 @@ std_msgs::Bool haveGoal;
 using namespace std;
 using namespace hebiros;
 
-//int leg_components = 18;
-int leg_components = 6;
+int leg_components = 18;
 vector<vector<float>> queue;
 vector<float> next_set;
-vector<double> goalpos(leg_components);        // The goal position
-vector<double> goaleffort(leg_components);     // The efforts
+vector<double> goalpos(leg_components);
 volatile int            feedbackvalid = 0;
 volatile int            feedbackvalidAll = 0;
-sensor_msgs::JointState feedback;     // The actuator feedback structure
+sensor_msgs::JointState feedback;    
 sensor_msgs::JointState initial_pos;
 double d = 10;
 // max seconds to move between points
@@ -38,8 +37,6 @@ bool newGoal;
 bool standing = false;
 double current_time, timeSince;
 string status;
-//hexapod::InstructionQueue positionQueue;
-
 /*
 **   Feedback Subscriber Callback
 */
@@ -54,15 +51,14 @@ void feedbackCallback(sensor_msgs::JointState data)
 /*
 **   Goal Subscriber Callback
 */
-void goalCallback(const hexapod::Instruction data)
+void goalCallback(const hexapod::InstructionOld data)
 {
   ROS_INFO("goal_talking");
-  goalpos = data.positions;
-  goaleffort = data.efforts;
+  goalpos = data.data;
   newGoal = true;
-  //positionQueue = data.Queue;
   moving.data = true;
   status = data.header;
+  ROS_INFO("%f", goalpos[0]);
 }
 
 int main(int argc, char **argv)
@@ -70,7 +66,7 @@ int main(int argc, char **argv)
   // Initialize the basic ROS node, run at 200Hz.
   ros::init(argc, argv, "tripod_gait");
   ros::NodeHandle n;
-  ros::Rate loop_rate(200);
+  ros::Rate loop_rate(100);
   goalpos.clear();
   
   current_time = ros::Time::now().toSec(); 
@@ -111,9 +107,9 @@ int main(int argc, char **argv)
                                    };
 
   // Repeatedly call the service until it succeeds.
-  while(!add_group_client.call(add_group_srv)) ;
+  while(!add_group_client.call(add_group_srv));
 
-  // Check the size of this group.  This has an output argument.
+  // Check the size of this group. This has an output argument.
   ros::ServiceClient size_client = n.serviceClient<SizeSrv>("/hebiros/"+group_name+"/size");
   SizeSrv size_srv;
   size_client.call(size_srv);
@@ -172,26 +168,6 @@ int main(int argc, char **argv)
   }
   ROS_INFO("Initial feedback received");
 
-  ROS_INFO("Waiting for all initial feedback");
-  while (!feedbackvalid)  {
-      ros::spinOnce();
-      loop_rate.sleep();
-  }
-  ROS_INFO("All initial feedback received");
-
-
-  /*
-  while (!newGoal)
-  {
-    ROS_INFO("Not all goals received");
-    moving.data = false;
-    moving_publisher.publish(moving);
-    ros::spinOnce();
-    loop_rate.sleep();
-  }
-  ROS_INFO("All goals received");
-  */
- 
   moving.data = false;
   moving_publisher.publish(moving);
 
@@ -202,11 +178,7 @@ int main(int argc, char **argv)
 
   while(ros::ok())
   {
-  haveGoal.data = newGoal;
-  haveGoalPublisher.publish(haveGoal);
     timeSince = ros::Time::now().toSec() - current_time;
-    ROS_INFO("Status: %s", status.c_str());
-    ROS_INFO("New Goal: %d", newGoal);
 
     if (newGoal)
     {
@@ -222,16 +194,11 @@ int main(int argc, char **argv)
 
     if (timeSince < moving_time && !goalpos.empty() && !nextStance)
     {
-      ROS_INFO("True if");
+      ROS_INFO("moving");
       int motor = 0;
       // Keep moving towards the new point using min-jerk trajectory
       for (int i = 0; i < leg_components; i++)
       {
-        // Test the first leg first.
-        //if (i == 0 || i == 1 || i == 2)
-
-        //if (true)
-        //if (i < 6)
         if (i == 0 || i == 1 || i == 2)
         {
           command_msg.position[i] = initial_pos.position[i] + 
@@ -248,100 +215,30 @@ int main(int argc, char **argv)
                                     (timeSince/moving_time) *
                                     (timeSince/moving_time) *
                                     (timeSince/moving_time)); 
-
-          //command_msg.effort[i] = goaleffort[i];
-          command_msg.effort[i] = initial_pos.effort[i] + 
-                                  (goaleffort[i] - initial_pos.effort[i]) * 
-                                  (10 * (timeSince/moving_time) *
-                                  (timeSince/moving_time) *
-                                  (timeSince/moving_time) - 
-                                  15 * (timeSince/moving_time) *
-                                  (timeSince/moving_time) *
-                                  (timeSince/moving_time) *
-                                  (timeSince/moving_time) + 
-                                  6 * (timeSince/moving_time) *
-                                  (timeSince/moving_time) *
-                                  (timeSince/moving_time) *
-                                  (timeSince/moving_time) *
-                                  (timeSince/moving_time)); 
-
-
-          ROS_INFO("CMD: %f", command_msg.position[1]);
-
-          /*
-          if (i % 3 == 2)
-          {
-            if (i % 2 == 0)
-            {
-              if (feedback.position[i] > 1.1)
-                command_msg.effort[i] = goaleffort[i] - 1;
-              else
-                command_msg.effort[i] = goaleffort[i];
-            }
-          }
-          //*/
-
-          if (i == 1)
-          {
-            //ROS_INFO("vel %d: %f", i, feedback.position[i]);
-          }
         }
         else
         {
           command_msg.position[i] = feedback.position[i];
           command_msg.effort[i] = feedback.effort[i];
         }
-
-        ROS_INFO("ABS: %f", abs(feedback.position[1] - goalpos[1]));
-        if (abs(feedback.position[i] - goalpos[i]) < 0.01)
-          motor++;
-      }
-
-      ROS_INFO("Next Stance: %d", nextStance);
-      if (motor == 18)
-      {
-        nextStance = true;
-        newGoal = true;
-        motor = 0;
-  haveGoal.data = newGoal;
-  haveGoalPublisher.publish(haveGoal);
-      }
-      else
-        motor = 0;
-
       timeSince = ros::Time::now().toSec() - current_time;
       command_publisher.publish(command_msg);
-      //standing = true;
-      //ROS_INFO("****vel %d: %f", 1, feedback.position[1]);
-      ROS_INFO("Goal Pos %d: %f", 1, goalpos[1]);
-
-      /*
-      ros::spinOnce();
-      loop_rate.sleep();
-      //*/
+      }
     }
-
-    //if (status == "final")
-    else if (status == "final")
+    /*else if (status == "final")
     {
-      ROS_INFO("Final if");
       // Maintain previous position
-      if (!goalpos.empty() && !goaleffort.empty())
+      if (!goalpos.empty())
       {
         //ROS_INFO("final in");
         for (int i = 0; i < leg_components; i++)
         {
           command_msg.position[i] = goalpos[i];
-          command_msg.effort[i] = goaleffort[i];
         }
 
-        /*
         command_msg.position[3] = feedback.position[3];
         command_msg.position[4] = feedback.position[4];
         command_msg.position[5] = feedback.position[5];
-        //*/
-
-        ///*
         command_msg.position[6] = feedback.position[6];
         command_msg.position[7] = feedback.position[7];
         command_msg.position[8] = feedback.position[8];
@@ -354,27 +251,27 @@ int main(int argc, char **argv)
         command_msg.position[15] = feedback.position[15];
         command_msg.position[16] = feedback.position[16];
         command_msg.position[17] = feedback.position[17];
-        //*/
 
         command_publisher.publish(command_msg);
       }
       else
       {
-        ROS_INFO("final out");
         command_msg.position = feedback.position;
         command_msg.effort = feedback.effort;
         command_publisher.publish(command_msg);
       }
-    }
+    }*/
     else
     {
-      ROS_INFO("Else");
       // Ready to receive new position command
+      ROS_INFO("else");
       moving.data = false;
       moving_publisher.publish(moving);
     }
 
-    ros::spinOnce();
+    ros::getGlobalCallbackQueue()->callOne();
+    //ros::spinOnce();
     loop_rate.sleep();
+
   }
 }

@@ -33,8 +33,8 @@ volatile int            feedbackvalid = 0;
 
 double startTime, currTime;
 
-double pos1 = M_PI / 2 + 0.5;
-double pos2 = M_PI / 2 + 0.5;
+double pos1 = M_PI / 2;
+double pos2 = M_PI / 2;
 //double eff1 = M_PI / 2;
 
 void movingCallback(std_msgs::Bool data)
@@ -67,9 +67,9 @@ void feedbackCallback(sensor_msgs::JointState data)
 void stand()
 {
   double effortFemurDown, effortFemurDownFinal, effortTibiaDown;
-  effortFemurDown = 8;
-  effortFemurDownFinal = 6;
-  effortTibiaDown = 2.8;
+  effortFemurDown = 3;
+  effortFemurDownFinal = 1.5;
+  effortTibiaDown = 1;
   for (int i = 0; i < 3; i++)
   {
     standing_pos.positions.clear();
@@ -77,48 +77,28 @@ void stand()
 
     // Create a queue of standing positions.
     if (i == 0)
-    //if (true)
     {
       for (int j = 0; j < leg_components; j++)
       {
-        standing_pos.positions.push_back(0.);
-        /*
-        if (j == 0)
-        {
-          standing_pos.positions.push_back(0.3);
-        }
-        else if (j == 3)
-        {
-          standing_pos.positions.push_back(-0.3);
-        }
-        else if (j == 12)
-        {
-          standing_pos.positions.push_back(-0.3);
-        }
-        else if (j == 15)
-        {
-          standing_pos.positions.push_back(0.3);
-        }
-        else
-        {
-          standing_pos.positions.push_back(0.);
-        }
-        //*/
+        switch (j) { 
+          case 0: 
+            standing_pos.positions.push_back(.5); 
+            break;
+          case 15: 
+            standing_pos.positions.push_back(.5); 
+            break;
+          case 3: 
+            standing_pos.positions.push_back(-.5);
+            break;
+          case 12: 
+            standing_pos.positions.push_back(-.5);
+            break;
+          default :
+            standing_pos.positions.push_back(0.);
+        } 
       }
-
       standing_pos.state = 0;
     }
-    /*
-    else if (i == 1)
-    {
-      for (int j = 0; j < leg_components; j++)
-      {
-        standing_pos.positions.push_back(0.);
-      }
-    }
-    //*/
- 
-    //else if (false)
     else if (i == 1)
     {
       for (int j = 0; j < leg_components; j++)
@@ -133,12 +113,12 @@ void stand()
           else if (j == 1)
           {
             standing_pos.positions.push_back(pos1);
-            standing_pos.efforts.push_back(11);
+            standing_pos.efforts.push_back(effortFemurDown);
           }
           else if (j == 4)
           {
             standing_pos.positions.push_back(-pos1);
-            standing_pos.efforts.push_back(-10);
+            standing_pos.efforts.push_back(-effortFemurDown);
           }
           else if (j % 2 == 0)
           {
@@ -155,53 +135,39 @@ void stand()
         {
           if (j % 2 == 0)
           {
+            standing_pos.efforts.push_back(-0.5);
             standing_pos.positions.push_back(0.);
-            standing_pos.efforts.push_back(-0.2);
           }
           else
           {
+            standing_pos.efforts.push_back(0.5);
             standing_pos.positions.push_back(0.);
-            standing_pos.efforts.push_back(0.2);
           }
         }
         else
         {
-          standing_pos.positions.push_back(0.);
+          switch (j) { 
+            case 0: 
+              standing_pos.positions.push_back(.5); 
+              break;
+            case 15: 
+              standing_pos.positions.push_back(.5); 
+              break;
+            case 3: 
+              standing_pos.positions.push_back(-.5);
+              break;
+            case 12: 
+              standing_pos.positions.push_back(-.5);
+              break;
+            default: 
+              standing_pos.positions.push_back(0);
+          }
           standing_pos.efforts.push_back(0.);
-          /*
-          if (j == 0)
-          {
-            standing_pos.positions.push_back(0.3);
-            standing_pos.efforts.push_back(0.);
-          }
-          else if (j == 3)
-          {
-            standing_pos.positions.push_back(-0.3);
-            standing_pos.efforts.push_back(-0.);
-          }
-          else if (j == 12)
-          {
-            standing_pos.positions.push_back(-0.3);
-            standing_pos.efforts.push_back(-0.);
-          }
-          else if (j == 15)
-          {
-            standing_pos.positions.push_back(0.3);
-            standing_pos.efforts.push_back(0.);
-          }
-          else
-          {
-            standing_pos.positions.push_back(0.);
-            standing_pos.efforts.push_back(0.);
-          }
-          //*/
         }
-      }
-
       standing_pos.state = 1;
+      }
     }
     else
-    //else if (false)
     {
       for (int j = 0; j < leg_components; j++)
       {
@@ -214,92 +180,59 @@ void stand()
           }
           else if (j == 1)
           {
-            standing_pos.positions.push_back(pos2);
-            standing_pos.efforts.push_back(effortFemurDownFinal + 3);
+            standing_pos.positions.push_back(pos2 + .2);
+            standing_pos.efforts.push_back(effortFemurDownFinal + 2);
           }
           else if (j == 4)
           {
-            standing_pos.positions.push_back(-pos2);
-            standing_pos.efforts.push_back(-effortFemurDownFinal - 2);
+            standing_pos.positions.push_back(-pos2 - .2);
+            standing_pos.efforts.push_back(-effortFemurDownFinal - 1);
           }
           else if (j % 2 == 0)
           {
             standing_pos.positions.push_back(-pos1);
-            standing_pos.efforts.push_back(-effortFemurDownFinal - 1);
+            standing_pos.efforts.push_back(-effortFemurDownFinal);
           }
           else
           {
             standing_pos.positions.push_back(pos1);
             standing_pos.efforts.push_back(effortFemurDownFinal);
           }
- 
-          /*
-          if (j % 2 == 0)
-          {
-            standing_pos.positions.push_back(-M_PI / 2);
-            standing_pos.efforts.push_back(-effortFemurDown);
-          }
-          else
-          {
-            standing_pos.positions.push_back(M_PI / 2);
-            standing_pos.efforts.push_back(effortFemurDown);
-          }
-          //*/
         }
         else if (j % 3 == 2)
         {
           if (j % 2 == 0)
           {
-            standing_pos.positions.push_back(0.);
-            standing_pos.efforts.push_back(-effortTibiaDown + 0.0);
+            standing_pos.efforts.push_back(-effortTibiaDown);
+            standing_pos.positions.push_back(.1);
           }
           else
           {
-            standing_pos.positions.push_back(0.);
-            standing_pos.efforts.push_back(effortTibiaDown - 0.2);
+            standing_pos.positions.push_back(-.1);
+            standing_pos.efforts.push_back(effortTibiaDown);
           }
         }
         else
         {
-          standing_pos.positions.push_back(0.);
-          standing_pos.efforts.push_back(0.);
-          /*
-          if (j == 0)
-          {
-            standing_pos.positions.push_back(0.3);
-            standing_pos.efforts.push_back(0.);
+          switch (j) { 
+            case 0: 
+              standing_pos.positions.push_back(.5); 
+              break;
+            case 15: 
+              standing_pos.positions.push_back(.5); 
+              break;
+            case 3: 
+              standing_pos.positions.push_back(-.5);
+              break;
+            case 12: 
+              standing_pos.positions.push_back(-.5);
+              break;
+            default: 
+              standing_pos.positions.push_back(0);
           }
-          else if (j == 3)
-          {
-            standing_pos.positions.push_back(-0.3);
-            standing_pos.efforts.push_back(-0.);
-          }
-          else if (j == 12)
-          {
-            standing_pos.positions.push_back(-0.3);
-            standing_pos.efforts.push_back(-0.);
-          }
-          else if (j == 15)
-          {
-            standing_pos.positions.push_back(0.3);
-            standing_pos.efforts.push_back(0.);
-          }
-          else
-          {
-            standing_pos.positions.push_back(0.);
-            standing_pos.efforts.push_back(0.);
-          }
-          //*/
-        }
-        /*
-        else
-        {
-          standing_pos.positions.push_back(0.);
           standing_pos.efforts.push_back(0.);
         }
-        */
       }
-
       standing_pos.state = 2;
     }
 
@@ -319,18 +252,9 @@ void stand()
 
   ROS_INFO("done");
   ROS_INFO("stand3: %zd", standing_queue.data.size());
-  /*
-  for (int i = 0; i < sizeof(standing_queue.data) / sizeof(standing_queue.data[0]); i++)
-  {
-    ROS_INFO("stand: %f", standing_queue.data[i].positions[1]);
-  }
-  */
 }
 
-void walkTripod() { 
-  // Create a queue of tripod gait positions.
 
-}
 
 int main(int argc, char **argv)
 { 
@@ -395,13 +319,6 @@ int main(int argc, char **argv)
   feedback.velocity.reserve(leg_components);
   feedback.effort.reserve(leg_components);
 
-  /*
-  initial_pos.position.reserve(leg_components);
-  initial_pos.velocity.reserve(leg_components);
-  initial_pos.effort.reserve(leg_components);*/
-
-  // Create a publisher to send commands to the actuator group.
-  // ros::Publisher command_publisher = n.advertise<sensor_msgs::JointState>("/hebiros/"+group_name+"/command/joint_state", 100);
 
   // GoalPos publisher
   ros::Publisher goal_publisher = n.advertise<hexapod::Instruction>("/goal", 100);
@@ -497,36 +414,6 @@ int main(int argc, char **argv)
       //*/
     }
 
-
-    /*
-    ROS_INFO("Is moving? %d", moving.data);
-    if (!moving.data)
-    {
-      // Send over next target position
-      //if (standing_queue.data.empty())
-      if (!go)
-      {
-        stand();
-        go = true;
-      }
-
-
-      if (!published)
-      {
-        current_pos = standing_queue.data.back();
-        standing_queue.data.pop_back(); 
-        goal_publisher.publish(current_pos);
-        published = true;
-      }
-
-      moving.data = true;
-      ROS_INFO("********data positions: %f", current_pos.positions[1]);
-    }
-    if (getGoal.data)
-    {
-      published = false;
-    }
-    */
 
     ros::spinOnce();
     loop_rate.sleep();

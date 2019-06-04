@@ -52,7 +52,9 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   Instruction.msg
+  InstructionOld.msg
   InstructionQueue.msg
+  InstructionQueueOld.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -138,7 +140,9 @@ include_directories(
 # add_executable(${PROJECT_NAME}_urdf src/urdf_joint_state_pub.cpp)
 add_executable(${PROJECT_NAME}_control src/tripod_control.cpp)
 add_executable(${PROJECT_NAME}_gait src/tripod_gait.cpp)
+add_executable(${PROJECT_NAME}_gaitOld src/tripod_gaitOld.cpp)
 add_executable(${PROJECT_NAME}_brain src/tripod_brain.cpp)
+add_executable(${PROJECT_NAME}_brainOld src/tripod_brainOld.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -150,8 +154,10 @@ add_executable(${PROJECT_NAME}_brain src/tripod_brain.cpp)
 ## same as for the library above
 # add_dependencies(${PROJECT_NAME}_urdf ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(${PROJECT_NAME}_gait ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME}_gaitOld ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(${PROJECT_NAME}_control ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(${PROJECT_NAME}_brain ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(${PROJECT_NAME}_brainOld ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 # target_link_libraries(${PROJECT_NAME}_urdf
@@ -161,10 +167,16 @@ add_dependencies(${PROJECT_NAME}_brain ${${PROJECT_NAME}_EXPORTED_TARGETS} ${cat
 target_link_libraries(${PROJECT_NAME}_gait
   ${catkin_LIBRARIES}
 )
+target_link_libraries(${PROJECT_NAME}_gaitOld
+  ${catkin_LIBRARIES}
+)
 target_link_libraries(${PROJECT_NAME}_control
   ${catkin_LIBRARIES}
 )
 target_link_libraries(${PROJECT_NAME}_brain
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(${PROJECT_NAME}_brainOld
   ${catkin_LIBRARIES}
 )
 

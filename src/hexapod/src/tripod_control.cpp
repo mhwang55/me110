@@ -33,7 +33,7 @@ int currState = -1;
 int prevState = -1;
 
 // max seconds to move between points
-double moving_time = 5;
+double moving_time = 3;
 double current_time, timeSince;
 double d = 10;
 
@@ -66,7 +66,7 @@ void feedbackCallback(sensor_msgs::JointState data)
 */
 void goalCallback(const hexapod::Instruction data)
 {
-  ROS_INFO("goal_talking");
+  //ROS_INFO("goal_talking");
   goalpos = data.positions;
   //ROS_INFO("Goal Position Callback Empty: %d", goalpos.empty());
   goaleffort = data.efforts;
@@ -75,8 +75,6 @@ void goalCallback(const hexapod::Instruction data)
     haveGoal = true;
     currState = data.state;
   }
-  //positionQueue = data.Queue;
-  //moving.data = true;
   status = data.header;
 }
 
@@ -241,12 +239,9 @@ int main(int argc, char **argv)
         effortDiffs[i] = 0.0;
     }
 
-    //if (timeSince < moving_time && !goalpos.empty() && !nextStance)
-
-    // 
-
     if (timeSince < moving_time && !goalpos.empty())
     {
+      //ROS_INFO("%f", ros::Time::now().toSec());
       int motor = 0;
 
       // Keep moving towards the new point using min-jerk trajectory
@@ -256,7 +251,6 @@ int main(int argc, char **argv)
 
         if (true)
         //if (i < 6)
-        //if (i == 0 || i == 1 || i == 2)
         {
           double givenPos, givenEffort;
 
@@ -290,59 +284,45 @@ int main(int argc, char **argv)
                         (timeSince/moving_time) *
                         (timeSince/moving_time));
 
+          double p_front = 11;
+          double p_middle = 7;
+          double p_back = 4;
 
-          double p = 10;
-
-          if (i % 3 == 0)
+          if (i < 6)
           {
-            if (abs(feedback.position[i] - givenPos) > 0.1)
-              effortDiffs[i] = -p * (feedback.position[i] - givenPos);
+            if (abs(feedback.position[i] - givenPos) > 0.5)
+              effortDiffs[i] = -p_front * (feedback.position[i] - givenPos);
             else
               effortDiffs[i] = 0;
           }
-          else if (i % 3 == 1)
+          else if (i > 5 && i < 12)
           {
-            if (abs(feedback.position[i] - givenPos) > 0.1)
-              effortDiffs[i] = -p * (feedback.position[i] - givenPos);
+            if (abs(feedback.position[i] - givenPos) > 0.5)
+              effortDiffs[i] = -p_middle * (feedback.position[i] - givenPos);
             else
               effortDiffs[i] = 0;
           }
-          else if (i % 3 == 2)
+          else if (i > 11)
           {
-            if (abs(feedback.position[i] - givenPos) > 0.1)
-              effortDiffs[i] = -p * (feedback.position[i] - givenPos);
+            if (abs(feedback.position[i] - givenPos) > 0.5)
+              effortDiffs[i] = -p_back * (feedback.position[i] - givenPos);
             else
               effortDiffs[i] = 0;
           }
 
-          //if (i == 2 || i == 5)
           givenEffort += effortDiffs[i];
 
           int x = 5;
-          ///*
           if (i == x)
           {
-            ROS_INFO("GOAL: %f", goalpos[x]);
+            /*ROS_INFO("GOAL: %f", goalpos[x]);
             ROS_INFO("GIVEN: %f", givenPos);
             ROS_INFO("FEEDBACK: %f", feedback.position[x]);
             ROS_INFO("DIFF: %f", feedback.position[x] - givenPos);
             ROS_INFO("DIFF_AMOUNT: %f", effortDiffs[x]);
             ROS_INFO("GOAL Effort %d: %f", x, goaleffort[x]);
-            ROS_INFO("CMD Effort %d: %f", x, command_msg.effort[x]);
+            ROS_INFO("CMD Effort %d: %f", x, command_msg.effort[x]);*/
           }
-          //*/
-
-
-
-          //command_msg.effort[i] = goaleffort[i];
-
-          /*
-          if (i == 1)
-            givenEffort += effortDiff1;
-          else if (i == 4)
-            givenEffort += effortDiff4;
-          */
-
 
           command_msg.position[i] = givenPos;
           command_msg.effort[i] = givenEffort;
@@ -353,19 +333,11 @@ int main(int argc, char **argv)
           command_msg.effort[i] = feedback.effort[i];
         }
 
-        //if (abs(feedback.position[1] - goalpos[1]) < 0.5 && abs(feedback.position[4] - goalpos[4]) < 0.5 && abs(feedback.position[2] - goalpos[2]) < 0.05 && abs(feedback.position[5] - goalpos[5]) < 0.05)
-
-        double error1 = 0.1,
-               error2 = 0.05;
+        double error1 = 0.4,
+               error2 = 0.2;
         if (abs(feedback.position[1] - goalpos[1]) < error1 && abs(feedback.position[4] - goalpos[4]) < error1 && abs(feedback.position[2] - goalpos[2]) < error2 && abs(feedback.position[5] - goalpos[5]) < error2)
           motor = 2;
       }
-
-      //ROS_INFO("Next Stance: %d", nextStance);
-      //if (motor == 18)
-      //if (motor == leg_components)
-
-      ROS_INFO("motor: %d", motor);
 
       if (motor >= 2)
       {
@@ -384,22 +356,11 @@ int main(int argc, char **argv)
       timeSince = ros::Time::now().toSec() - current_time;
       goalPublisher.publish(command_msg);
 
-      /*
-      ROS_INFO("GOAL Effort %d: %f", 1, goaleffort[1]);
-      ROS_INFO("GOAL Position %d: %f", 1, goalpos[1]);
-      */
-
-      /*
-      ROS_INFO("GOAL Effort %d: %f", 2, goaleffort[2]);
-      ROS_INFO("CMD Effort %d: %f", 2, command_msg.effort[2]);
-      */
-
     }
-
-    //if (status == "final")
-    else if (status == "final")
+    else //if (status == "final" || currState == 2)
     {
-      ROS_INFO("Final if");
+      //ROS_INFO("Final if");
+
       // Maintain previous position
       if (!goalpos.empty() && !goaleffort.empty())
       {
@@ -414,9 +375,6 @@ int main(int argc, char **argv)
         command_msg.position[3] = feedback.position[3];
         command_msg.position[4] = feedback.position[4];
         command_msg.position[5] = feedback.position[5];
-        //*/
-
-        ///*
         command_msg.position[6] = feedback.position[6];
         command_msg.position[7] = feedback.position[7];
         command_msg.position[8] = feedback.position[8];
@@ -429,13 +387,15 @@ int main(int argc, char **argv)
         command_msg.position[15] = feedback.position[15];
         command_msg.position[16] = feedback.position[16];
         command_msg.position[17] = feedback.position[17];
-        //*/
+        */
 
         goalPublisher.publish(command_msg);
 
-        //command_publisher.publish(command_msg);
-
-        getGoal = false;
+        if (status == "final") {
+          getGoal = false; 
+        } else {
+          getGoal = true;
+        }
         getNewGoal.data = getGoal;
         getGoalPublisher.publish(getNewGoal);
       }
@@ -448,24 +408,7 @@ int main(int argc, char **argv)
         getGoal = false;
         getNewGoal.data = getGoal;
         getGoalPublisher.publish(getNewGoal);
-
-        //command_publisher.publish(command_msg);
       }
-    }
-    else
-    {
-      current_time = ros::Time::now().toSec(); 
-      ROS_INFO("Else");
-
-      // Ready to receive new position command
-      //moving.data = false;
-      //moving_publisher.publish(moving);
-
-      ///*
-      getGoal = true;
-      getNewGoal.data = getGoal;
-      getGoalPublisher.publish(getNewGoal);
-      //*/
     }
 
     ros::spinOnce();
