@@ -21,9 +21,10 @@ using namespace hebiros;
 std_msgs::Bool moving;
 std_msgs::Bool alive;
 
-hexapod::InstructionQueue standing_queue;
+hexapod::InstructionQueue traj_queue;
 hexapod::Instruction standing_pos;
 hexapod::Instruction current_pos;
+hexapod::Instruction walking_pos;
 int leg_components = 18;
 //int leg_components = 6;
 
@@ -36,6 +37,7 @@ double startTime, currTime;
 double pos1 = M_PI / 2;
 double pos2 = M_PI / 2;
 //double eff1 = M_PI / 2;
+int state = 0;
 
 void movingCallback(std_msgs::Bool data)
 {
@@ -63,6 +65,25 @@ void feedbackCallback(sensor_msgs::JointState data)
   //ROS_INFO("FBK pos [%f]", feedback.position[0]);
   feedbackvalid = 1;
 }
+
+
+void walk() { 
+
+  for (int i = 0; i < 1; i++) { 
+    walking_pos.positions.clear();
+    if (i == 0) { 
+      for (int j = 0; j < leg_components; j++) { 
+        if (j == 10) {// || j == 10 || j == 13) { 
+          walking_pos.positions.push_back(0.);
+        } else { 
+          walking_pos.positions.push_back(feedback.position[j]);
+        }
+      } 
+    }
+    traj_queue.data.push_back(walking_pos);
+  } 
+} 
+
 
 void stand()
 {
@@ -180,12 +201,12 @@ void stand()
           }
           else if (j == 1)
           {
-            standing_pos.positions.push_back(pos2 + .2);
+            standing_pos.positions.push_back(pos2);
             standing_pos.efforts.push_back(effortFemurDownFinal + 2);
           }
           else if (j == 4)
           {
-            standing_pos.positions.push_back(-pos2 - .2);
+            standing_pos.positions.push_back(-pos2);
             standing_pos.efforts.push_back(-effortFemurDownFinal - 1);
           }
           else if (j % 2 == 0)
@@ -245,13 +266,13 @@ void stand()
       standing_pos.header = "standing";
     }
 
-    standing_queue.data.push_back(standing_pos);
+    traj_queue.data.push_back(standing_pos);
   }
 
-  reverse(standing_queue.data.begin(), standing_queue.data.end());
+  reverse(traj_queue.data.begin(), traj_queue.data.end());
 
   ROS_INFO("done");
-  ROS_INFO("stand3: %zd", standing_queue.data.size());
+  ROS_INFO("stand3: %zd", traj_queue.data.size());
 }
 
 
@@ -263,7 +284,7 @@ int main(int argc, char **argv)
   ros::NodeHandle n;
   ros::Rate loop_rate(200);
 
-  standing_queue.data.reserve(leg_components);
+  traj_queue.data.reserve(leg_components);
 
   // Ask the Hebi node to list the modules.  Create a client to their
   // service, instantiate a service class, and call.  This has no
@@ -381,39 +402,49 @@ int main(int argc, char **argv)
       // Send over next target position
       if (!go)
       {
-        stand();
+        switch (state) { 
+          case 0: 
+            stand();
+            break; 
+          case 1: 
+            walk();
+            break;
+        }
         go = true;
       }
   
       if (!published)
       {
-        ROS_INFO("size before: %zd", standing_queue.data.size());
-        current_pos = standing_queue.data.back();
-        standing_queue.data.pop_back(); 
+        ROS_INFO("size before: %zd", traj_queue.data.size());
+        current_pos = traj_queue.data.back();
+        traj_queue.data.pop_back(); 
         published = true;
         ROS_INFO("published: %f", current_pos.positions[1]);
-        ROS_INFO("size after: %zd", standing_queue.data.size());
+        ROS_INFO("size after: %zd", traj_queue.data.size());
         //goal_publisher.publish(current_pos);
       }
       else if (getGoal)
       {
         startTime = ros::Time::now().toSec();
 
-        ROS_INFO("size get before: %zd", standing_queue.data.size());
-        current_pos = standing_queue.data.back();
-        standing_queue.data.pop_back(); 
+        ROS_INFO("size get before: %zd", traj_queue.data.size());
+        current_pos = traj_queue.data.back();
+        traj_queue.data.pop_back(); 
         getGoal = false;
         //goal_publisher.publish(current_pos);
-        ROS_INFO("published get: %f", current_pos.positions[1]);
+        ROS_INFO("published get: %f", current_pos.positions[10]);
 
-        ROS_INFO("size get after: %zd", standing_queue.data.size());
+        ROS_INFO("size get after: %zd", traj_queue.data.size());
+        if (traj_queue.data.size() == 0) { 
+          state = 1;
+          go = false;
+        } 
       }
       ///*
       if (current_pos.header != "NULL")
         goal_publisher.publish(current_pos);
       //*/
     }
-
 
     ros::spinOnce();
     loop_rate.sleep();
