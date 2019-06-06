@@ -314,17 +314,15 @@ int main(int argc, char **argv)
           command_msg.position[i] = givenPos;
           command_msg.effort[i] = givenEffort;
 
-          int x = 10;
+          int x = 7;
           if (i==x)// || i == 2)
           {
-            //ROS_INFO("GOAL: %f", goalpos[x]);
-            //ROS_INFO("GIVEN: %f", givenPos);
-            //ROS_INFO("FEEDBACK: %f", feedback.position[x]);
-            //ROS_INFO("DIFF: %f", feedback.position[x] - givenPos);
-            //ROS_INFO("DIFF_AMOUNT: %f", effortDiffs[x]);
             ROS_INFO("GOAL Effort %d: %f", x, goaleffort[x]);
             ROS_INFO("CMD Effort %d: %f", x, command_msg.effort[x]);
-            //ROS_INFO("feedback effort %d: %f", i, feedback.effort[i]);
+            ROS_INFO("FBK Effort %d: %f", i, feedback.effort[i]);
+            ROS_INFO("GOAL Position %d: %f", x, goalpos[x]);
+            ROS_INFO("CMD Position %d: %f", x, command_msg.position[x]);
+            ROS_INFO("FBK Position %d: %f", i, feedback.position[i]);
           }
 
           //command_msg.effort[2] = 10;
@@ -343,17 +341,21 @@ int main(int argc, char **argv)
         }
 
 
-        double error1 = 0.2,
-               error2 = 0.2;
+        double error1 = 0.3,
+               error2 = 0.3;
         if (abs(feedback.position[1] - goalpos[1]) < error1 && abs(feedback.position[4] - goalpos[4]) < error1 && abs(feedback.position[2] - goalpos[2]) < error2 && abs(feedback.position[5] - goalpos[5]) < error2)
+        //if (abs(feedback.position[i] - goalpos[i]) < error1)
           motor = 2;
+          //motor++;
       }
 
+      //if (motor >= 18)
       if (motor >= 2)
       {
         //nextStance = true;
         getGoal = true;
         prevState = currState;
+        motor = 0;
       }
       else
       {
