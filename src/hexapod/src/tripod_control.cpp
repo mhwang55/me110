@@ -250,7 +250,7 @@ int main(int argc, char **argv)
         // Test the first leg first.
 
         if (true)
-        //if (i < 6)
+        //if (i < 3)
         {
           double givenPos, givenEffort;
 
@@ -290,42 +290,51 @@ int main(int argc, char **argv)
 
           if (i < 6)
           {
-            if (abs(feedback.position[i] - givenPos) > 0.5)
+            if (abs(feedback.position[i] - givenPos) > 0.1)
               effortDiffs[i] = -p_front * (feedback.position[i] - givenPos);
             else
               effortDiffs[i] = 0;
           }
           else if (i > 5 && i < 12)
           {
-            if (abs(feedback.position[i] - givenPos) > 0.5)
+            if (abs(feedback.position[i] - givenPos) > 0.1)
               effortDiffs[i] = -p_middle * (feedback.position[i] - givenPos);
             else
               effortDiffs[i] = 0;
           }
           else if (i > 11)
           {
-            if (abs(feedback.position[i] - givenPos) > 0.5)
+            if (abs(feedback.position[i] - givenPos) > 0.1)
               effortDiffs[i] = -p_back * (feedback.position[i] - givenPos);
             else
               effortDiffs[i] = 0;
           }
 
           givenEffort += effortDiffs[i];
+          command_msg.position[i] = givenPos;
+          command_msg.effort[i] = givenEffort;
 
-          int x = 5;
-          if (i == x)
+          int x = 10;
+          if (i==x)// || i == 2)
           {
-            /*ROS_INFO("GOAL: %f", goalpos[x]);
-            ROS_INFO("GIVEN: %f", givenPos);
-            ROS_INFO("FEEDBACK: %f", feedback.position[x]);
-            ROS_INFO("DIFF: %f", feedback.position[x] - givenPos);
+            //ROS_INFO("GOAL: %f", goalpos[x]);
+            //ROS_INFO("GIVEN: %f", givenPos);
+            //ROS_INFO("FEEDBACK: %f", feedback.position[x]);
+            //ROS_INFO("DIFF: %f", feedback.position[x] - givenPos);
             //ROS_INFO("DIFF_AMOUNT: %f", effortDiffs[x]);
-            //ROS_INFO("GOAL Effort %d: %f", x, goaleffort[x]);
-            //ROS_INFO("CMD Effort %d: %f", x, command_msg.effort[x]);*/
+            ROS_INFO("GOAL Effort %d: %f", x, goaleffort[x]);
+            ROS_INFO("CMD Effort %d: %f", x, command_msg.effort[x]);
+            //ROS_INFO("feedback effort %d: %f", i, feedback.effort[i]);
           }
 
-          command_msg.position[i] = givenPos;
-          command_msg.effort[i] = 0;
+          //command_msg.effort[2] = 10;
+          /*if (i == 0) { 
+            command_msg.effort[i] = 0;
+          } else if (i == 1) { 
+            command_msg.effort[i] = 15;
+          } else if (i == 2) { 
+            command_msg.effort[i] = 0; 
+          }*/
         }
         else
         {
@@ -394,19 +403,22 @@ int main(int argc, char **argv)
         ROS_INFO("final out");
         command_msg.position = feedback.position;
         command_msg.effort = feedback.effort;
+        /*for (int i = 0 ; i < leg_components; i ++) { 
+          ROS_INFO("feedback effort %d : %f", i, feedback.effort[i]);
+        }*/ 
         goalPublisher.publish(command_msg);
         getGoal = true;
         getNewGoal.data = getGoal;
         getGoalPublisher.publish(getNewGoal);
       //} 
 
-      for (int i = 0; i < leg_components; i++)
+      /*for (int i = 0; i < leg_components; i++)
       {
         command_msg.position[i] = goalpos[i];
         //command_msg.effort[i] = goaleffort[i];
       }
 
-      goalPublisher.publish(command_msg);
+      goalPublisher.publish(command_msg);*/
 
     }
 

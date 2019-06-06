@@ -68,18 +68,62 @@ void feedbackCallback(sensor_msgs::JointState data)
 
 
 void walk() { 
-
+  ROS_INFO("walk_called");
   for (int i = 0; i < 1; i++) { 
     walking_pos.positions.clear();
+    walking_pos.efforts.clear();
     if (i == 0) { 
       for (int j = 0; j < leg_components; j++) { 
-        if (j == 10) {// || j == 10 || j == 13) { 
+        if (j == 10 || j == 1 || j == 13) {// || j == 10 || j == 13) { 
           walking_pos.positions.push_back(0.);
+          if (feedback.position[j] > 0) { 
+            walking_pos.efforts.push_back(-5.);
+          } else { 
+            walking_pos.efforts.push_back(5.);
+          } 
         } else { 
           walking_pos.positions.push_back(feedback.position[j]);
+          if (j % 3 != 0) { 
+            if (feedback.effort[j] > 0) { 
+              if (j == 4) { 
+                walking_pos.efforts.push_back(feedback.effort[j]+6);
+              } else if (j == 16) {
+                walking_pos.efforts.push_back(feedback.effort[j]+6);
+              } else { 
+                walking_pos.efforts.push_back(feedback.effort[j]+3);
+              }
+            } else { 
+              walking_pos.efforts.push_back(feedback.effort[j]-3);
+            }
+          } else if (j == 5) { 
+             if (feedback.effort[j] > 0) {
+              walking_pos.efforts.push_back(feedback.effort[j]-2);
+             } else { 
+              walking_pos.efforts.push_back(feedback.effort[j]+2);
+             }
+          } else if (j == 8) { 
+             if (feedback.effort[j] > 0) {
+              walking_pos.efforts.push_back(feedback.effort[j]-2);
+             } else { 
+              walking_pos.efforts.push_back(feedback.effort[j]+2);
+             }
+          } else if (j == 17) { 
+             if (feedback.effort[j] > 0) {
+              walking_pos.efforts.push_back(feedback.effort[j]-2);
+             } else { 
+              walking_pos.efforts.push_back(feedback.effort[j]+2);
+             }
+          } else if (j == 3)  { 
+            walking_pos.efforts.push_back(-1);
+          }  else if (j == 6) { 
+            walking_pos.efforts.push_back(1);
+          } else { 
+            walking_pos.efforts.push_back(1);
+          }
         }
       } 
     }
+    walking_pos.state = 3;
     traj_queue.data.push_back(walking_pos);
   } 
 } 
@@ -88,17 +132,18 @@ void walk() {
 void stand()
 {
   double effortFemurDown, effortFemurDownFinal, effortTibiaDown;
-  effortFemurDown = 3;
-  effortFemurDownFinal = 1.5;
-  effortTibiaDown = 1;
+  effortFemurDown = 8;
+  effortFemurDownFinal = 6;
+  effortTibiaDown = 3;
   for (int i = 0; i < 3; i++)
   {
-    standing_pos.positions.clear();
     standing_pos.efforts.clear();
+    standing_pos.positions.clear();
 
     // Create a queue of standing positions.
     if (i == 0)
     {
+      ROS_INFO("HELLO");
       for (int j = 0; j < leg_components; j++)
       {
         switch (j) { 
@@ -114,54 +159,51 @@ void stand()
           case 12: 
             standing_pos.positions.push_back(-.5);
             break;
-          default :
-            standing_pos.positions.push_back(0.);
+          default:
+            standing_pos.positions.push_back(0);
         } 
       }
+      standing_pos.efforts.push_back(0.);
       standing_pos.state = 0;
     }
     else if (i == 1)
     {
+      ROS_INFO("HELLO1");
       for (int j = 0; j < leg_components; j++)
       {
         if (j % 3 == 1)
         {
-          if (j == 16)
-          {
-            standing_pos.positions.push_back(-pos1);
-            standing_pos.efforts.push_back(-effortFemurDown);
-          }
-          else if (j == 1)
+          if (j == 1 || j == 13)
           {
             standing_pos.positions.push_back(pos1);
             standing_pos.efforts.push_back(effortFemurDown);
           }
-          else if (j == 4)
+          else if (j == 4 || j == 16)
           {
             standing_pos.positions.push_back(-pos1);
             standing_pos.efforts.push_back(-effortFemurDown);
           }
-          else if (j % 2 == 0)
-          {
-            standing_pos.positions.push_back(-pos1);
-            standing_pos.efforts.push_back(-effortFemurDown - 1);
-          }
-          else
+          else if (j == 7)
           {
             standing_pos.positions.push_back(pos1);
-            standing_pos.efforts.push_back(effortFemurDown);
+            standing_pos.efforts.push_back(effortFemurDown - 2);
+          }
+          else if (j == 10) 
+          {
+            standing_pos.positions.push_back(-pos1);
+            standing_pos.efforts.push_back(-effortFemurDown + 2);
           }
         }
         else if (j % 3 == 2)
         {
           if (j % 2 == 0)
           {
-            standing_pos.efforts.push_back(-0.5);
+            standing_pos.efforts.push_back(-effortTibiaDown);
             standing_pos.positions.push_back(0.);
           }
           else
           {
-            standing_pos.efforts.push_back(0.5);
+            standing_pos.efforts.push_back(effortTibiaDown);
             standing_pos.positions.push_back(0.);
           }
         }
@@ -190,47 +232,60 @@ void stand()
     }
     else
     {
+      ROS_INFO("HELLO2");
       for (int j = 0; j < leg_components; j++)
       {
         if (j % 3 == 1)
         {
-          if (j == 16)
+          if (j == 1)
           {
-            standing_pos.positions.push_back(-pos1);
-            standing_pos.efforts.push_back(-effortFemurDownFinal);
-          }
-          else if (j == 1)
-          {
+            standing_pos.positions.push_back(pos2 - .2);
+            standing_pos.efforts.push_back(effortFemurDownFinal-2);
+          } else if (j == 13) { 
             standing_pos.positions.push_back(pos2);
-            standing_pos.efforts.push_back(effortFemurDownFinal + 2);
-          }
+            standing_pos.efforts.push_back(effortFemurDownFinal);
+          } 
           else if (j == 4)
           {
+            standing_pos.positions.push_back(-pos2 + .2);
+            standing_pos.efforts.push_back(-effortFemurDownFinal+2);
+          } else if (j == 16) { 
             standing_pos.positions.push_back(-pos2);
-            standing_pos.efforts.push_back(-effortFemurDownFinal - 1);
-          }
-          else if (j % 2 == 0)
-          {
-            standing_pos.positions.push_back(-pos1);
             standing_pos.efforts.push_back(-effortFemurDownFinal);
+          }
+          else if (j == 7)
+          {
+            standing_pos.positions.push_back(-pos1 + .1);
+            standing_pos.efforts.push_back(-effortFemurDownFinal+1);
           }
           else
           {
-            standing_pos.positions.push_back(pos1);
-            standing_pos.efforts.push_back(effortFemurDownFinal);
+            // j == 10
+            standing_pos.positions.push_back(pos1 - .1);
+            standing_pos.efforts.push_back(effortFemurDownFinal-1);
           }
         }
         else if (j % 3 == 2)
         {
-          if (j % 2 == 0)
-          {
-            standing_pos.efforts.push_back(-effortTibiaDown);
+          if (j == 2) { 
             standing_pos.positions.push_back(.1);
-          }
-          else
-          {
+            standing_pos.efforts.push_back(-effortTibiaDown+3);
+          } 
+          else if (j == 5) { 
             standing_pos.positions.push_back(-.1);
-            standing_pos.efforts.push_back(effortTibiaDown);
+            standing_pos.efforts.push_back(effortTibiaDown-3);
+          } else if (j == 8) { 
+            standing_pos.positions.push_back(.1);
+            standing_pos.efforts.push_back(-effortTibiaDown+2);
+          } else if (j == 11) { 
+            standing_pos.positions.push_back(-.1);
+            standing_pos.efforts.push_back(effortTibiaDown-1);
+          } else if (j == 14) { 
+            standing_pos.positions.push_back(.1);
+            standing_pos.efforts.push_back(-effortTibiaDown);
+          } else if (j == 17) { 
+            standing_pos.positions.push_back(-.1);
+            standing_pos.efforts.push_back(effortTibiaDown-1);
           }
         }
         else
@@ -266,6 +321,9 @@ void stand()
       standing_pos.header = "standing";
     }
 
+    for (int w = 0 ; w < leg_components; w ++) { 
+      ROS_INFO("testing %d: %f", w, standing_pos.positions[w]);
+    } 
     traj_queue.data.push_back(standing_pos);
   }
 
@@ -415,6 +473,9 @@ int main(int argc, char **argv)
   
       if (!published)
       {
+        ROS_INFO("POS0: %f", traj_queue.data[0].positions[1]);
+        ROS_INFO("POS1: %f", traj_queue.data[1].positions[1]);
+        ROS_INFO("POS2: %f", traj_queue.data[2].positions[1]);
         ROS_INFO("size before: %zd", traj_queue.data.size());
         current_pos = traj_queue.data.back();
         traj_queue.data.pop_back(); 
@@ -438,7 +499,7 @@ int main(int argc, char **argv)
         if (traj_queue.data.size() == 0) { 
           state = 1;
           go = false;
-        } 
+        }
       }
       ///*
       if (current_pos.header != "NULL")
