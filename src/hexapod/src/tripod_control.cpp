@@ -24,6 +24,7 @@ int leg_components = 18;
 vector<vector<float>> queue;
 vector<float> next_set;
 vector<double> goalpos(leg_components);        // The goal position
+vector<double> goalvel(leg_components);        // The velocities
 vector<double> goaleffort(leg_components);     // The efforts
 volatile int            feedbackvalid = 0;
 sensor_msgs::JointState feedback;     // The actuator feedback structure
@@ -68,6 +69,7 @@ void goalCallback(const hexapod::Instruction data)
 {
   //ROS_INFO("goal_talking");
   goalpos = data.positions;
+  goalvel = data.velocities;
   //ROS_INFO("Goal Position Callback Empty: %d", goalpos.empty());
   goaleffort = data.efforts;
   if (currState == prevState || currState == -1)
@@ -312,17 +314,24 @@ int main(int argc, char **argv)
 
           givenEffort += effortDiffs[i];
           command_msg.position[i] = givenPos;
+          if (goalvel[i] != NULL)
+            command_msg.velocity[i] = goalvel[i];
+
           command_msg.effort[i] = givenEffort;
 
-          int x = 7;
+          int x = 1;
           if (i==x)// || i == 2)
           {
+            /*
             ROS_INFO("GOAL Effort %d: %f", x, goaleffort[x]);
             ROS_INFO("CMD Effort %d: %f", x, command_msg.effort[x]);
             ROS_INFO("FBK Effort %d: %f", i, feedback.effort[i]);
             ROS_INFO("GOAL Position %d: %f", x, goalpos[x]);
             ROS_INFO("CMD Position %d: %f", x, command_msg.position[x]);
             ROS_INFO("FBK Position %d: %f", i, feedback.position[i]);
+            */
+            ROS_INFO("CMD Velocity %d: %f", i, command_msg.velocity[i]);
+            ROS_INFO("FBK Velocity %d: %f", i, feedback.velocity[i]);
           }
 
           //command_msg.effort[2] = 10;
