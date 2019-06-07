@@ -34,7 +34,7 @@ int currState = -1;
 int prevState = -1;
 
 // max seconds to move between points
-double moving_time = 3;
+double moving_time = 5.0;
 double current_time, timeSince;
 double d = 10;
 
@@ -232,6 +232,7 @@ int main(int argc, char **argv)
     if (haveGoal)
     {
       // Got a new target
+      ROS_INFO("have goal: %d", currState);
       initial_pos = feedback;
       current_time = ros::Time::now().toSec();
       timeSince = 0;
@@ -319,19 +320,24 @@ int main(int argc, char **argv)
 
           command_msg.effort[i] = givenEffort;
 
-          int x = 1;
+          int x = 10;
           if (i==x)// || i == 2)
           {
             /*
             ROS_INFO("GOAL Effort %d: %f", x, goaleffort[x]);
             ROS_INFO("CMD Effort %d: %f", x, command_msg.effort[x]);
             ROS_INFO("FBK Effort %d: %f", i, feedback.effort[i]);
-            ROS_INFO("GOAL Position %d: %f", x, goalpos[x]);
-            ROS_INFO("CMD Position %d: %f", x, command_msg.position[x]);
-            ROS_INFO("FBK Position %d: %f", i, feedback.position[i]);
-            */
             ROS_INFO("CMD Velocity %d: %f", i, command_msg.velocity[i]);
             ROS_INFO("FBK Velocity %d: %f", i, feedback.velocity[i]);
+            */
+            ROS_INFO("INIT Position %d: %f", x, initial_pos.position[x]);
+            ROS_INFO("GOAL Position %d: %f", x, goalpos[x]);
+            ROS_INFO("TIME %d: %f | %f | %f", x, timeSince, moving_time, timeSince/moving_time);
+            ROS_INFO("DIFF %d: %f", x, goalpos[x] - initial_pos.position[x]);
+            ROS_INFO("GIV Position %d: %f", x, givenPos);
+            ROS_INFO("CMD Position %d: %f", x, command_msg.position[x]);
+            ROS_INFO("FBK Position %d: %f", x, feedback.position[x]);
+            ROS_INFO("STATE: %d", currState);
           }
 
           //command_msg.effort[2] = 10;
@@ -349,13 +355,21 @@ int main(int argc, char **argv)
           command_msg.effort[i] = feedback.effort[i];
         }
 
-
         double error1 = 0.3,
                error2 = 0.3;
-        if (abs(feedback.position[1] - goalpos[1]) < error1 && abs(feedback.position[4] - goalpos[4]) < error1 && abs(feedback.position[2] - goalpos[2]) < error2 && abs(feedback.position[5] - goalpos[5]) < error2)
-        //if (abs(feedback.position[i] - goalpos[i]) < error1)
-          motor = 2;
-          //motor++;
+
+        if (currState < 5)
+        {
+          if (abs(feedback.position[1] - goalpos[1]) < error1 && abs(feedback.position[4] - goalpos[4]) < error1 && abs(feedback.position[2] - goalpos[2]) < error2 && abs(feedback.position[5] - goalpos[5]) < error2)
+          //if (abs(feedback.position[i] - goalpos[i]) < error1)
+            motor = 2;
+            //motor++;
+        }
+        else
+        {
+          if (abs(feedback.position[7] - goalpos[7]) < error1 && abs(feedback.position[10] - goalpos[10]) < error1 && abs(feedback.position[8] - goalpos[8]) < error2 && abs(feedback.position[11] - goalpos[11]) < error2)
+            motor = 2;
+        }
       }
 
       //if (motor >= 18)
@@ -376,7 +390,6 @@ int main(int argc, char **argv)
 
       timeSince = ros::Time::now().toSec() - current_time;
       goalPublisher.publish(command_msg);
-
     }
     else //if (status == "final" || currState == 2)
     {
@@ -412,6 +425,8 @@ int main(int argc, char **argv)
       //else
       //{
         ROS_INFO("final out");
+        current_time = ros::Time::now().toSec(); 
+        prevState = currState;
         command_msg.position = feedback.position;
         command_msg.effort = feedback.effort;
         /*for (int i = 0 ; i < leg_components; i ++) { 

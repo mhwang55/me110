@@ -36,6 +36,9 @@ double startTime, currTime;
 
 double pos1 = M_PI / 2;
 double pos2 = M_PI / 2;
+
+double init_hip_pos = 0.5;
+
 //double eff1 = M_PI / 2;
 int state = 0;
 
@@ -72,17 +75,18 @@ void walk()
   ROS_INFO("walk_called");
 
   int x = 2;
-  for (int i = 0; i < 2; i++)
+  double add = 5.0;
+  for (int i = 0; i < 4; i++)
   {
     walking_pos.positions.clear();
+    walking_pos.velocities.clear();
     walking_pos.efforts.clear();
     // 2 by 2 by 2 gait
     if (i == 0)
     {
-      double add = 5.0;
       for (int j = 0; j < leg_components; j++)
       {
-        standing_pos.velocities.push_back(NULL);
+        walking_pos.velocities.push_back(NULL);
         if (j == 1)
         {
           walking_pos.positions.push_back(0.7);
@@ -102,7 +106,6 @@ void walk()
     }
     else if (i == 1)
     {
-      int add = 5.0;
       for (int j = 0; j < leg_components; j++)
       {
         if (j == 0 || j == 1)
@@ -123,39 +126,39 @@ void walk()
         else if (j == 0)
         {
           // hip 1
-          walking_pos.positions.push_back(0.8);
+          walking_pos.positions.push_back(init_hip_pos + 0.3);
           walking_pos.efforts.push_back(-3.);
         }
         else if (j == 3)
         {
           // hip 2
-          walking_pos.positions.push_back(0.2);
+          walking_pos.positions.push_back(init_hip_pos - 0.3);
           walking_pos.efforts.push_back(1.);
         }
         else if (j == 6)
         {
           // hip 3
           //walking_pos.positions.push_back(-0.6);
-          walking_pos.positions.push_back(-0.35);
+          walking_pos.positions.push_back(0.25 - 0.3);
           walking_pos.efforts.push_back(-1.);
         }
         else if (j == 9)
         {
           // hip 4
           //walking_pos.positions.push_back(0.3);
-          walking_pos.positions.push_back(-0.05);
+          walking_pos.positions.push_back(-0.25 + 0.3);
           walking_pos.efforts.push_back(1.5);
         }
         else if (j == 12)
         {
           // hip 5
-          walking_pos.positions.push_back(-0.6);
+          walking_pos.positions.push_back(-init_hip_pos - 0.3);
           walking_pos.efforts.push_back(-1.);
         }
         else if (j == 15)
         {
           // hip 6
-          walking_pos.positions.push_back(0.2);
+          walking_pos.positions.push_back(init_hip_pos - 0.3);
           walking_pos.efforts.push_back(3.);
         }
         else if (j == 2 || j == 17)
@@ -188,9 +191,129 @@ void walk()
         }
       }
     }
+    else if (i == 2)
+    {
+      for (int j = 0; j < leg_components; j++)
+      {
+        walking_pos.velocities.push_back(NULL);
+        if (j == 7)
+        {
+          walking_pos.positions.push_back(0.7);
+          walking_pos.efforts.push_back(-5.);
+        }
+        else if (j == 10)
+        {
+          walking_pos.positions.push_back(-0.7);
+          walking_pos.efforts.push_back(5.);
+        }
+        else
+        {
+          walking_pos.positions.push_back(feedback.position[j]);
+          walking_pos.efforts.push_back(feedback.effort[j]);
+        }
+      }
+    }
+    else if (i == 3)
+    {
+      for (int j = 0; j < leg_components; j++)
+      {
+        //if (j == 0 || j == 1)
+        if (false)
+          walking_pos.velocities.push_back(2.0);
+        else
+          walking_pos.velocities.push_back(NULL);
+
+        if (j == 1)
+        {
+          walking_pos.positions.push_back(pos1);
+          walking_pos.efforts.push_back(-5.);
+        }
+        else if (j == 16)
+        {
+          walking_pos.positions.push_back(-pos1);
+          walking_pos.efforts.push_back(5.);
+        }
+        else if (j == 0)
+        {
+          // hip 1
+          walking_pos.positions.push_back(init_hip_pos + 0.0);
+          walking_pos.efforts.push_back(-3.);
+        }
+        else if (j == 3)
+        {
+          // hip 2
+          walking_pos.positions.push_back(init_hip_pos - 0.6);
+          walking_pos.efforts.push_back(1.);
+        }
+        else if (j == 6)
+        {
+          // hip 3
+          //walking_pos.positions.push_back(-0.6);
+          walking_pos.positions.push_back(0.25 - 0.3);
+          walking_pos.efforts.push_back(-1.);
+        }
+        else if (j == 9)
+        {
+          // hip 4
+          //walking_pos.positions.push_back(0.3);
+          walking_pos.positions.push_back(-0.25 + 0.3);
+          walking_pos.efforts.push_back(1.5);
+        }
+        else if (j == 12)
+        {
+          // hip 5
+          walking_pos.positions.push_back(-init_hip_pos - 0.6);
+          walking_pos.efforts.push_back(-1.);
+        }
+        else if (j == 15)
+        {
+          // hip 6
+          walking_pos.positions.push_back(init_hip_pos - 0.0);
+          walking_pos.efforts.push_back(3.);
+        }
+        else if (j == 2 || j == 17)
+        {
+          // tibias 1 and 6
+          walking_pos.positions.push_back(0.0);
+          walking_pos.efforts.push_back(0.);
+        }
+        else if (j == 4)
+        {
+          // femur 2
+          walking_pos.positions.push_back(feedback.position[j]);
+          walking_pos.efforts.push_back(feedback.effort[j] + add);
+        }
+        else if (j == 7)
+        {
+          // femur 3
+          walking_pos.positions.push_back(pos1);
+          walking_pos.efforts.push_back(-5.0);
+        }
+        else if (j == 10)
+        {
+          // femur 4
+          walking_pos.positions.push_back(-pos1);
+          walking_pos.efforts.push_back(5.0);
+        }
+        else if (j == 13) {
+          // femur 5
+          walking_pos.positions.push_back(feedback.position[j]);
+          walking_pos.efforts.push_back(feedback.effort[j] + add);
+        }
+        else
+        {
+          walking_pos.positions.push_back(feedback.position[j]);
+          walking_pos.efforts.push_back(feedback.effort[j]);
+        }
+      }
+    }
+ 
+
     walking_pos.state = 3 + i;
     traj_queue.data.push_back(walking_pos);
   }
+
+  reverse(traj_queue.data.begin(), traj_queue.data.end());
 
 
   //ROS_INFO("TRAJ 1: %f", traj_queue.data[0].positions[1]);
@@ -650,13 +773,14 @@ int main(int argc, char **argv)
 
         ROS_INFO("size get before: %zd", traj_queue.data.size());
         current_pos = traj_queue.data.back();
-        traj_queue.data.pop_back(); 
+        traj_queue.data.pop_back();
         getGoal = false;
         //goal_publisher.publish(current_pos);
         ROS_INFO("published get: %f", current_pos.positions[10]);
 
         ROS_INFO("size get after: %zd", traj_queue.data.size());
-        if (traj_queue.data.size() == 0) { 
+        if (traj_queue.data.size() == 0)
+        {
           state = 1;
           go = false;
         }
