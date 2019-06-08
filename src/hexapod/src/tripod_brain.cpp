@@ -76,7 +76,7 @@ void walk()
 
   int x = 2;
   double add = 5.0;
-  for (int i = 0; i < 4; i++)
+  for (int i = 0; i < 5; i++)
   {
     walking_pos.positions.clear();
     walking_pos.velocities.clear();
@@ -90,12 +90,12 @@ void walk()
         if (j == 1)
         {
           walking_pos.positions.push_back(0.7);
-          walking_pos.efforts.push_back(-5.);
+          walking_pos.efforts.push_back(-7.);
         }
         else if (j == 16)
         {
           walking_pos.positions.push_back(-0.7);
-          walking_pos.efforts.push_back(5.);
+          walking_pos.efforts.push_back(7.);
         }
         else
         {
@@ -116,12 +116,12 @@ void walk()
         if (j == 1)
         {
           walking_pos.positions.push_back(pos1);
-          walking_pos.efforts.push_back(-5.);
+          walking_pos.efforts.push_back(-7.);
         }
         else if (j == 16)
         {
           walking_pos.positions.push_back(-pos1);
-          walking_pos.efforts.push_back(5.);
+          walking_pos.efforts.push_back(7.);
         }
         else if (j == 0)
         {
@@ -199,12 +199,12 @@ void walk()
         if (j == 7)
         {
           walking_pos.positions.push_back(0.7);
-          walking_pos.efforts.push_back(-5.);
+          walking_pos.efforts.push_back(-7.);
         }
         else if (j == 10)
         {
           walking_pos.positions.push_back(-0.7);
-          walking_pos.efforts.push_back(5.);
+          walking_pos.efforts.push_back(7.);
         }
         else
         {
@@ -226,12 +226,12 @@ void walk()
         if (j == 1)
         {
           walking_pos.positions.push_back(pos1);
-          walking_pos.efforts.push_back(-5.);
+          walking_pos.efforts.push_back(-7.);
         }
         else if (j == 16)
         {
           walking_pos.positions.push_back(-pos1);
-          walking_pos.efforts.push_back(5.);
+          walking_pos.efforts.push_back(7.);
         }
         else if (j == 0)
         {
@@ -287,13 +287,13 @@ void walk()
         {
           // femur 3
           walking_pos.positions.push_back(pos1);
-          walking_pos.efforts.push_back(-5.0);
+          walking_pos.efforts.push_back(7.0);
         }
         else if (j == 10)
         {
           // femur 4
           walking_pos.positions.push_back(-pos1);
-          walking_pos.efforts.push_back(5.0);
+          walking_pos.efforts.push_back(-7.0);
         }
         else if (j == 13) {
           // femur 5
@@ -307,6 +307,128 @@ void walk()
         }
       }
     }
+    else if (i == 4)
+    {
+      for (int j = 0; j < leg_components; j++)
+      {
+        walking_pos.velocities.push_back(NULL);
+        if (j == 4)
+        {
+          walking_pos.positions.push_back(-0.7);
+          walking_pos.efforts.push_back(7.);
+        }
+        else if (j == 13)
+        {
+          walking_pos.positions.push_back(0.7);
+          walking_pos.efforts.push_back(-7.);
+        }
+        else
+        {
+          walking_pos.positions.push_back(feedback.position[j]);
+          walking_pos.efforts.push_back(feedback.effort[j]);
+        }
+      }
+    }
+    /*
+     * Haven't actually implemented this portion yet.
+     * TODO: need to change values of femur 5 and femur 2 to correct values, as
+     * well as making the rest of the hips rotate properly
+     */
+    else if (i == 5)
+    {
+      for (int j = 0; j < leg_components; j++)
+      {
+        //if (j == 0 || j == 1)
+        if (false)
+          walking_pos.velocities.push_back(2.0);
+        else
+          walking_pos.velocities.push_back(NULL);
+
+        if (j == 1)
+        {
+          walking_pos.positions.push_back(pos1);
+          walking_pos.efforts.push_back(-7.);
+        }
+        else if (j == 16)
+        {
+          walking_pos.positions.push_back(-pos1);
+          walking_pos.efforts.push_back(7.);
+        }
+        else if (j == 0)
+        {
+          // hip 1
+          walking_pos.positions.push_back(init_hip_pos + 0.0);
+          walking_pos.efforts.push_back(-3.);
+        }
+        else if (j == 3)
+        {
+          // hip 2
+          walking_pos.positions.push_back(init_hip_pos - 0.6);
+          walking_pos.efforts.push_back(1.);
+        }
+        else if (j == 6)
+        {
+          // hip 3
+          //walking_pos.positions.push_back(-0.6);
+          walking_pos.positions.push_back(0.25 - 0.3);
+          walking_pos.efforts.push_back(-1.);
+        }
+        else if (j == 9)
+        {
+          // hip 4
+          //walking_pos.positions.push_back(0.3);
+          walking_pos.positions.push_back(-0.25 + 0.3);
+          walking_pos.efforts.push_back(1.5);
+        }
+        else if (j == 12)
+        {
+          // hip 5
+          walking_pos.positions.push_back(-init_hip_pos - 0.6);
+          walking_pos.efforts.push_back(-1.);
+        }
+        else if (j == 15)
+        {
+          // hip 6
+          walking_pos.positions.push_back(init_hip_pos - 0.0);
+          walking_pos.efforts.push_back(3.);
+        }
+        else if (j == 2 || j == 17)
+        {
+          // tibias 1 and 6
+          walking_pos.positions.push_back(0.0);
+          walking_pos.efforts.push_back(0.);
+        }
+        else if (j == 4)
+        {
+          // femur 2
+          walking_pos.positions.push_back(feedback.position[j]);
+          walking_pos.efforts.push_back(feedback.effort[j] + add);
+        }
+        else if (j == 7)
+        {
+          // femur 3
+          walking_pos.positions.push_back(pos1);
+          walking_pos.efforts.push_back(7.0);
+        }
+        else if (j == 10)
+        {
+          // femur 4
+          walking_pos.positions.push_back(-pos1);
+          walking_pos.efforts.push_back(-7.0);
+        }
+        else if (j == 13) {
+          // femur 5
+          walking_pos.positions.push_back(feedback.position[j]);
+          walking_pos.efforts.push_back(feedback.effort[j] + add);
+        }
+        else
+        {
+          walking_pos.positions.push_back(feedback.position[j]);
+          walking_pos.efforts.push_back(feedback.effort[j]);
+        }
+      }
+    }
+ 
  
 
     walking_pos.state = 3 + i;
@@ -329,7 +451,7 @@ void walk()
     {
       for (int j = 0; j < leg_components; j++)
       {
-        if (j == 10 || j == 1 || j == 13) {// || j == 10 || j == 13) { 
+        if (j == 10 || j == 1 || j == 13) {// || j == 10 || j == 13)
           walking_pos.positions.push_back(0.);
           if (feedback.position[j] > 0) {
             walking_pos.efforts.push_back(-5.);
@@ -340,7 +462,8 @@ void walk()
         else
         {
           walking_pos.positions.push_back(feedback.position[j]);
-          if (j % 3 != 0) { 
+          if (j % 3 != 0)
+          {
             if (feedback.effort[j] > 0) { 
               if (j == 4) { 
                 walking_pos.efforts.push_back(feedback.effort[j]+6);
@@ -352,29 +475,39 @@ void walk()
             } else { 
               walking_pos.efforts.push_back(feedback.effort[j]-3);
             }
-          } else if (j == 5) { 
+          } else if (j == 5)
+          {
              if (feedback.effort[j] > 0) {
               walking_pos.efforts.push_back(feedback.effort[j]-2);
              } else { 
               walking_pos.efforts.push_back(feedback.effort[j]+2);
              }
-          } else if (j == 8) { 
+          } else if (j == 8)
+          {
              if (feedback.effort[j] > 0) {
               walking_pos.efforts.push_back(feedback.effort[j]-2);
              } else { 
               walking_pos.efforts.push_back(feedback.effort[j]+2);
              }
-          } else if (j == 17) { 
+          }
+          else if (j == 17)
+          {
              if (feedback.effort[j] > 0) {
               walking_pos.efforts.push_back(feedback.effort[j]-2);
              } else { 
               walking_pos.efforts.push_back(feedback.effort[j]+2);
              }
-          } else if (j == 3)  { 
+          }
+          else if (j == 3)
+          {
             walking_pos.efforts.push_back(-1);
-          }  else if (j == 6) { 
+          }
+          else if (j == 6)
+          {
             walking_pos.efforts.push_back(1);
-          } else { 
+          }
+          else
+          {
             walking_pos.efforts.push_back(1);
           }
         }
@@ -382,7 +515,7 @@ void walk()
     }
   }
   //*/
-} 
+}
 
 
 void stand()

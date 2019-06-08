@@ -365,9 +365,14 @@ int main(int argc, char **argv)
             motor = 2;
             //motor++;
         }
-        else
+        else if (currState < 7)
         {
           if (abs(feedback.position[7] - goalpos[7]) < error1 && abs(feedback.position[10] - goalpos[10]) < error1 && abs(feedback.position[8] - goalpos[8]) < error2 && abs(feedback.position[11] - goalpos[11]) < error2)
+            motor = 2;
+        }
+        else
+        {
+          if (abs(feedback.position[4] - goalpos[4]) < error1 && abs(feedback.position[5] - goalpos[5]) < error1 && abs(feedback.position[13] - goalpos[13]) < error2 && abs(feedback.position[14] - goalpos[14]) < error2)
             motor = 2;
         }
       }
