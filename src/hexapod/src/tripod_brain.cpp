@@ -76,7 +76,7 @@ void walk()
 
   int x = 2;
   double add = 5.0;
-  for (int i = 0; i < 5; i++)
+  for (int i = 0; i < 6; i++)
   {
     walking_pos.positions.clear();
     walking_pos.velocities.clear();
@@ -139,14 +139,14 @@ void walk()
         {
           // hip 3
           //walking_pos.positions.push_back(-0.6);
-          walking_pos.positions.push_back(0.25 - 0.3);
+          walking_pos.positions.push_back(-0.3);
           walking_pos.efforts.push_back(-1.);
         }
         else if (j == 9)
         {
           // hip 4
           //walking_pos.positions.push_back(0.3);
-          walking_pos.positions.push_back(-0.25 + 0.3);
+          walking_pos.positions.push_back(.3);
           walking_pos.efforts.push_back(1.5);
         }
         else if (j == 12)
@@ -206,6 +206,10 @@ void walk()
           walking_pos.positions.push_back(-0.7);
           walking_pos.efforts.push_back(7.);
         }
+        else if (j % 3 == 0) { 
+          walking_pos.positions.push_back(feedback.position[j]);
+          walking_pos.efforts.push_back(feedback.effort[j]);
+        }
         else
         {
           walking_pos.positions.push_back(feedback.position[j]);
@@ -225,50 +229,52 @@ void walk()
 
         if (j == 1)
         {
+          // femur 1
           walking_pos.positions.push_back(pos1);
-          walking_pos.efforts.push_back(-7.);
+          walking_pos.efforts.push_back(feedback.position[j] + add);
         }
         else if (j == 16)
         {
+          // femur 6
           walking_pos.positions.push_back(-pos1);
-          walking_pos.efforts.push_back(7.);
+          walking_pos.efforts.push_back(-7.);
         }
         else if (j == 0)
         {
           // hip 1
-          walking_pos.positions.push_back(init_hip_pos + 0.0);
+          walking_pos.positions.push_back(-.5);
           walking_pos.efforts.push_back(-3.);
         }
         else if (j == 3)
         {
           // hip 2
-          walking_pos.positions.push_back(init_hip_pos - 0.6);
-          walking_pos.efforts.push_back(1.);
+          walking_pos.positions.push_back(.6);
+          walking_pos.efforts.push_back(2.);
         }
         else if (j == 6)
         {
           // hip 3
           //walking_pos.positions.push_back(-0.6);
-          walking_pos.positions.push_back(0.25 - 0.3);
+          walking_pos.positions.push_back(0.);
           walking_pos.efforts.push_back(-1.);
         }
         else if (j == 9)
         {
           // hip 4
           //walking_pos.positions.push_back(0.3);
-          walking_pos.positions.push_back(-0.25 + 0.3);
+          walking_pos.positions.push_back(0.);
           walking_pos.efforts.push_back(1.5);
         }
         else if (j == 12)
         {
           // hip 5
-          walking_pos.positions.push_back(-init_hip_pos - 0.6);
+          walking_pos.positions.push_back(feedback.position[j] - .3);
           walking_pos.efforts.push_back(-1.);
         }
         else if (j == 15)
         {
           // hip 6
-          walking_pos.positions.push_back(init_hip_pos - 0.0);
+          walking_pos.positions.push_back(feedback.position[j] + .2);
           walking_pos.efforts.push_back(3.);
         }
         else if (j == 2 || j == 17)
@@ -286,14 +292,14 @@ void walk()
         else if (j == 7)
         {
           // femur 3
-          walking_pos.positions.push_back(pos1);
-          walking_pos.efforts.push_back(7.0);
+          walking_pos.positions.push_back(pos1+.5);
+          walking_pos.efforts.push_back(feedback.effort[j] + add);
         }
         else if (j == 10)
         {
           // femur 4
-          walking_pos.positions.push_back(-pos1);
-          walking_pos.efforts.push_back(-7.0);
+          walking_pos.positions.push_back(-pos1-.5);
+          walking_pos.efforts.push_back(-feedback.effort[j] - add);
         }
         else if (j == 13) {
           // femur 5
@@ -321,6 +327,12 @@ void walk()
         {
           walking_pos.positions.push_back(0.7);
           walking_pos.efforts.push_back(-7.);
+        } else if (j % 3 == 0) { 
+          walking_pos.positions.push_back(feedback.position[j]);
+          walking_pos.efforts.push_back(0);
+        } else if (j == 1) { 
+          walking_pos.positions.push_back(feedback.position[j]);
+          walking_pos.efforts.push_back(feedback.effort[j] + add/2);
         }
         else
         {
@@ -329,11 +341,6 @@ void walk()
         }
       }
     }
-    /*
-     * Haven't actually implemented this portion yet.
-     * TODO: need to change values of femur 5 and femur 2 to correct values, as
-     * well as making the rest of the hips rotate properly
-     */
     else if (i == 5)
     {
       for (int j = 0; j < leg_components; j++)
@@ -346,50 +353,52 @@ void walk()
 
         if (j == 1)
         {
+          // femur 1
           walking_pos.positions.push_back(pos1);
-          walking_pos.efforts.push_back(-7.);
+          walking_pos.efforts.push_back(feedback.position[j] + add);
         }
         else if (j == 16)
         {
+          // femur 6
           walking_pos.positions.push_back(-pos1);
-          walking_pos.efforts.push_back(7.);
+          walking_pos.efforts.push_back(-feedback.position[j] - add);
         }
         else if (j == 0)
         {
           // hip 1
-          walking_pos.positions.push_back(init_hip_pos + 0.0);
+          walking_pos.positions.push_back(feedback.position[j] - init_hip_pos*1.5);
           walking_pos.efforts.push_back(-3.);
         }
         else if (j == 3)
         {
           // hip 2
-          walking_pos.positions.push_back(init_hip_pos - 0.6);
+          walking_pos.positions.push_back(0.);
           walking_pos.efforts.push_back(1.);
         }
         else if (j == 6)
         {
           // hip 3
           //walking_pos.positions.push_back(-0.6);
-          walking_pos.positions.push_back(0.25 - 0.3);
+          walking_pos.positions.push_back(-feedback.position[j]);
           walking_pos.efforts.push_back(-1.);
         }
         else if (j == 9)
         {
           // hip 4
           //walking_pos.positions.push_back(0.3);
-          walking_pos.positions.push_back(-0.25 + 0.3);
+          walking_pos.positions.push_back(feedback.position[j] + init_hip_pos/2.);
           walking_pos.efforts.push_back(1.5);
         }
         else if (j == 12)
         {
           // hip 5
-          walking_pos.positions.push_back(-init_hip_pos - 0.6);
+          walking_pos.positions.push_back(0);
           walking_pos.efforts.push_back(-1.);
         }
         else if (j == 15)
         {
           // hip 6
-          walking_pos.positions.push_back(init_hip_pos - 0.0);
+          walking_pos.positions.push_back(feedback.position[j] - init_hip_pos/2);
           walking_pos.efforts.push_back(3.);
         }
         else if (j == 2 || j == 17)
@@ -401,24 +410,24 @@ void walk()
         else if (j == 4)
         {
           // femur 2
-          walking_pos.positions.push_back(feedback.position[j]);
-          walking_pos.efforts.push_back(feedback.effort[j] + add);
+          walking_pos.positions.push_back(-pos1);
+          walking_pos.efforts.push_back(-feedback.effort[j] - add);
         }
         else if (j == 7)
         {
           // femur 3
-          walking_pos.positions.push_back(pos1);
-          walking_pos.efforts.push_back(7.0);
+          walking_pos.positions.push_back(feedback.position[j]);
+          walking_pos.efforts.push_back(feedback.effort[j] + add);
         }
         else if (j == 10)
         {
           // femur 4
-          walking_pos.positions.push_back(-pos1);
-          walking_pos.efforts.push_back(-7.0);
+          walking_pos.positions.push_back(feedback.position[j]);
+          walking_pos.efforts.push_back(-feedback.effort[j] - add);
         }
         else if (j == 13) {
           // femur 5
-          walking_pos.positions.push_back(feedback.position[j]);
+          walking_pos.positions.push_back(pos1);
           walking_pos.efforts.push_back(feedback.effort[j] + add);
         }
         else
@@ -427,10 +436,18 @@ void walk()
           walking_pos.efforts.push_back(feedback.effort[j]);
         }
       }
+    } else { 
+      for (int j = 0; j < leg_components; j++) { 
+        if (j % 3 == 0) { 
+          walking_pos.positions.push_back(feedback.position[j]);
+          walking_pos.efforts.push_back(0);
+        } else { 
+          walking_pos.positions.push_back(feedback.position[j]);
+          walking_pos.efforts.push_back(feedback.effort[j]);
+        }
+      }
     }
  
- 
-
     walking_pos.state = 3 + i;
     traj_queue.data.push_back(walking_pos);
   }
@@ -522,8 +539,8 @@ void stand()
 {
   double effortFemurDown, effortFemurDownFinal, effortTibiaDown;
   effortFemurDown = 8;
-  effortFemurDownFinal = 6;
-  effortTibiaDown = 3;
+  effortFemurDownFinal = 7;
+  effortTibiaDown = 1.5;
   for (int i = 0; i < 3; i++)
   {
     standing_pos.efforts.clear();
@@ -539,19 +556,19 @@ void stand()
             standing_pos.positions.push_back(.5); 
             break;
           case 15: 
-            standing_pos.positions.push_back(.5); 
+            standing_pos.positions.push_back(.3); 
             break;
           case 6:
-            standing_pos.positions.push_back(0.25);
+            standing_pos.positions.push_back(0.);
             break;
           case 9:
-            standing_pos.positions.push_back(-0.25);
+            standing_pos.positions.push_back(-0.);
             break;
           case 3: 
             standing_pos.positions.push_back(-.5);
             break;
           case 12: 
-            standing_pos.positions.push_back(-.5);
+            standing_pos.positions.push_back(-.3);
             break;
           default:
             standing_pos.positions.push_back(0);
@@ -594,12 +611,12 @@ void stand()
           if (j % 2 == 0)
           {
             standing_pos.efforts.push_back(-effortTibiaDown);
-            standing_pos.positions.push_back(0.);
+            standing_pos.positions.push_back(-.2);
           }
           else
           {
             standing_pos.efforts.push_back(effortTibiaDown);
-            standing_pos.positions.push_back(0.);
+            standing_pos.positions.push_back(.2);
           }
         }
         else
@@ -675,24 +692,24 @@ void stand()
         {
           if (j == 2)
           {
-            standing_pos.positions.push_back(.1);
-            standing_pos.efforts.push_back(-effortTibiaDown+3);
+            standing_pos.positions.push_back(0);
+            standing_pos.efforts.push_back(-effortTibiaDown);
           } 
           else if (j == 5) { 
-            standing_pos.positions.push_back(-.1);
-            standing_pos.efforts.push_back(effortTibiaDown-3);
+            standing_pos.positions.push_back(0);
+            standing_pos.efforts.push_back(effortTibiaDown+1);
           } else if (j == 8) { 
-            standing_pos.positions.push_back(.1);
-            standing_pos.efforts.push_back(-effortTibiaDown+2);
+            standing_pos.positions.push_back(0);
+            standing_pos.efforts.push_back(-effortTibiaDown);
           } else if (j == 11) { 
-            standing_pos.positions.push_back(-.1);
-            standing_pos.efforts.push_back(effortTibiaDown-1);
+            standing_pos.positions.push_back(0);
+            standing_pos.efforts.push_back(effortTibiaDown);
           } else if (j == 14) { 
-            standing_pos.positions.push_back(.1);
+            standing_pos.positions.push_back(0);
             standing_pos.efforts.push_back(-effortTibiaDown);
           } else if (j == 17) { 
-            standing_pos.positions.push_back(-.1);
-            standing_pos.efforts.push_back(effortTibiaDown-1);
+            standing_pos.positions.push_back(0);
+            standing_pos.efforts.push_back(effortTibiaDown);
           }
         }
         else
@@ -896,7 +913,7 @@ int main(int argc, char **argv)
         current_pos = traj_queue.data.back();
         traj_queue.data.pop_back(); 
         published = true;
-        ROS_INFO("published: %f", current_pos.positions[1]);
+        ROS_INFO("published: %f", current_pos.efforts[16]);
         ROS_INFO("size after: %zd", traj_queue.data.size());
         //goal_publisher.publish(current_pos);
       }
@@ -909,13 +926,17 @@ int main(int argc, char **argv)
         traj_queue.data.pop_back();
         getGoal = false;
         //goal_publisher.publish(current_pos);
-        ROS_INFO("published get: %f", current_pos.positions[10]);
+        ROS_INFO("published get: %f", current_pos.efforts[16]);
 
         ROS_INFO("size get after: %zd", traj_queue.data.size());
         if (traj_queue.data.size() == 0)
         {
-          state = 1;
-          go = false;
+          if (state == 1) { 
+            go = true;
+          } else { 
+            state = 1;
+            go = false;
+          }
         }
       }
       ///*

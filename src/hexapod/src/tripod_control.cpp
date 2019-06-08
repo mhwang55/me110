@@ -320,7 +320,7 @@ int main(int argc, char **argv)
 
           command_msg.effort[i] = givenEffort;
 
-          int x = 10;
+          int x = 16;
           if (i==x)// || i == 2)
           {
             /*
@@ -330,6 +330,10 @@ int main(int argc, char **argv)
             ROS_INFO("CMD Velocity %d: %f", i, command_msg.velocity[i]);
             ROS_INFO("FBK Velocity %d: %f", i, feedback.velocity[i]);
             */
+            ROS_INFO("GOAL Effort %d: %f", x, goaleffort[x]);
+            ROS_INFO("FBK Effort %d: %f", i, feedback.effort[i]);
+            ROS_INFO("CMD Effort %d: %f", x, command_msg.effort[x]);
+            /*
             ROS_INFO("INIT Position %d: %f", x, initial_pos.position[x]);
             ROS_INFO("GOAL Position %d: %f", x, goalpos[x]);
             ROS_INFO("TIME %d: %f | %f | %f", x, timeSince, moving_time, timeSince/moving_time);
@@ -338,6 +342,7 @@ int main(int argc, char **argv)
             ROS_INFO("CMD Position %d: %f", x, command_msg.position[x]);
             ROS_INFO("FBK Position %d: %f", x, feedback.position[x]);
             ROS_INFO("STATE: %d", currState);
+            */
           }
 
           //command_msg.effort[2] = 10;
